@@ -94,7 +94,7 @@ export class SyncService {
            'bulk-import', 'pending', NOW(),
            jsonb_build_object(
              'connector_id', $1::text,
-             'twenty_object', $2,
+             'twenty_object', $2::text,
              'source_count', $3::int,
              'phase', '15c-bulk-import',
              'triggered_via', 'rest'
