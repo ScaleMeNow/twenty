@@ -102,13 +102,19 @@ export class SyncService {
       [input.connectorId, input.twentyObject, input.rows.length],
     );
     const runId = r.rows[0].id as string;
+    let index = 0;
     for (const row of input.rows) {
+      const naturalKey = (row.natural_key as string) ?? null;
+      const externalId = (row.external_id as string) ?? naturalKey ?? `bulk-${runId}-${index}`;
       await pool.query(
         `INSERT INTO migration_staging.normalized_rows
-           (run_id, twenty_object, twenty_id, natural_key, source, row_json)
-         VALUES ($1::uuid, $2, gen_random_uuid(), $3, 'bulk-import', $4::jsonb)`,
-        [runId, input.twentyObject, (row.natural_key as string) ?? null, JSON.stringify(row)],
+           (run_id, twenty_object, external_id, twenty_id, natural_key, source, row_json)
+         VALUES ($1::uuid, $2, $3, gen_random_uuid(), $4, 'bulk-import', $5::jsonb)
+         ON CONFLICT (run_id, twenty_object, external_id) DO UPDATE
+           SET row_json = EXCLUDED.row_json, built_at = NOW()`,
+        [runId, input.twentyObject, externalId, naturalKey, JSON.stringify(row)],
       );
+      index += 1;
     }
     return { runId, queued: input.rows.length };
   }
