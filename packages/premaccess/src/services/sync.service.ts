@@ -67,13 +67,50 @@ export class SyncService {
 
   async getConnector(id: string): Promise<ConnectorDto | null> {
     const { rows } = await this.getPool().query(
-      `SELECT c.id::text AS id, c.source, c.display_name AS "displayName",
-              c.status, NULL::timestamptz AS "lastSyncAt", NULL::text AS "lastSyncStatus",
-              0 AS "fieldOverrideCount"
+      `SELECT c.id::text AS id, c.source, c.display_name AS "displayName", c.status,
+              (SELECT MAX(r.started_at) FROM migration_staging.runs r
+               WHERE (r.meta->>'connector_id') = c.id::text) AS "lastSyncAt",
+              (SELECT r.status FROM migration_staging.runs r
+               WHERE (r.meta->>'connector_id') = c.id::text
+               ORDER BY r.started_at DESC LIMIT 1) AS "lastSyncStatus",
+              COALESCE((SELECT COUNT(*) FROM migration_staging.connector_field_overrides f
+                        WHERE f.connector_id = c.id), 0)::int AS "fieldOverrideCount"
        FROM migration_staging.connectors c WHERE c.id = $1::uuid`,
       [id],
     );
     return rows[0] ?? null;
+  }
+
+  async bulkImport(input: { connectorId: string; twentyObject: string; rows: Array<Record<string, unknown>> }): Promise<{ runId: string; queued: number }> {
+    const pool = this.getPool();
+    const r = await pool.query(
+      `INSERT INTO migration_staging.runs
+         (id, workspace_id, mode, status, started_at, meta)
+       VALUES (
+         gen_random_uuid(),
+         (SELECT workspace_id FROM migration_staging.connectors WHERE id = $1::uuid),
+         'bulk-import', 'pending', NOW(),
+         jsonb_build_object(
+           'connector_id', $1::text,
+           'twenty_object', $2,
+           'source_count', $3::int,
+           'phase', '15c-bulk-import',
+           'triggered_via', 'rest'
+         )
+       )
+       RETURNING id::text AS id`,
+      [input.connectorId, input.twentyObject, input.rows.length],
+    );
+    const runId = r.rows[0].id as string;
+    for (const row of input.rows) {
+      await pool.query(
+        `INSERT INTO migration_staging.normalized_rows
+           (run_id, twenty_object, twenty_id, natural_key, source, row_json)
+         VALUES ($1::uuid, $2, gen_random_uuid(), $3, 'bulk-import', $4::jsonb)`,
+        [runId, input.twentyObject, (row.natural_key as string) ?? null, JSON.stringify(row)],
+      );
+    }
+    return { runId, queued: input.rows.length };
   }
 
   async recentSyncs(connectorId: string | null, limit = 50): Promise<SyncDto[]> {
