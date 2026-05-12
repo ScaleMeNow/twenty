@@ -1,0 +1,34 @@
+# Phase 15 — per-target upstream-exit tracker.
+#
+# Lives at packages/premaccess/upstream-exit.yaml in the fork repo.
+# Reviewed monthly: when `status` advances to `merged_upstream`, the matching
+# entity + resolver + migration can be deleted in a follow-up PR.
+
+genericTarget:
+  status: not_started        # → forked → upstream_proposed → merged_upstream
+  description: |
+    Polymorphic join accepting any workspace object as parent/target. Replaces
+    the 3-fixed-slot model of noteTarget / taskTarget for our use cases.
+  exit_when: upstream_issue.merged
+  upstream_issue: null       # set once we open the proposal
+  migration_script: migrations/exit_generic_target.ts
+
+targetProvenance:
+  status: not_started
+  description: |
+    Sidecar table with source, confidence, inferredAt, inferenceEvidence
+    columns keyed by noteTargetId / taskTargetId / genericTargetId.
+  exit_when: upstream_audit_table_supports_polymorphic_targets
+  upstream_issue: null
+  migration_script: migrations/exit_target_provenance.ts
+
+bulkImport:
+  status: not_started
+  description: |
+    GraphQL mutation that runs each row through Twenty's existing
+    create/update services, rate-limited via a token bucket so search-index
+    workers don't get DoSed. Fires timeline events, webhooks, searchVector
+    updates — fixes the raw-SQL bypass migration/core/load.py has today.
+  exit_when: upstream_accepts_pr
+  upstream_pr_branch: feature/bulk-import-from-premaccess
+  draft_state: ready_after_production_validation
