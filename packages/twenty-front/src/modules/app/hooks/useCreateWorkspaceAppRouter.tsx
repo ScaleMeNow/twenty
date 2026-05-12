@@ -19,6 +19,7 @@ import { AuthFlowLayout } from '@/ui/layout/page/components/AuthFlowLayout';
 import { BlankLayout } from '@/ui/layout/page/components/BlankLayout';
 import { DefaultLayout } from '@/app/components/DefaultLayout';
 import { MainAppLayoutWithSidePanel } from '@/app/components/MainAppLayoutWithSidePanel';
+import { withPremaccessRouteObjects } from '~/extensions/premaccess/routeObjects';
 import { Verify } from '~/pages/onboarding/Verify';
 import { lazyWithPreload } from '~/utils/lazyWithPreload';
 
@@ -100,9 +101,11 @@ type CreateWorkspaceAppRouterArgs = {
 const createWorkspaceAppRouter = ({
   isAdminPageEnabled,
 }: CreateWorkspaceAppRouterArgs) => {
-  const workspaceRouteObjects = createWorkspaceRouteObjects({
-    isAdminPageEnabled,
-  });
+  const workspaceRouteObjects = withPremaccessRouteObjects(
+    createWorkspaceRouteObjects({
+      isAdminPageEnabled,
+    }),
+  );
 
   return createBrowserRouter([
     {
