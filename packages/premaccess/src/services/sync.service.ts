@@ -81,42 +81,58 @@ export class SyncService {
     return rows[0] ?? null;
   }
 
-  async bulkImport(input: { connectorId: string; twentyObject: string; rows: Array<Record<string, unknown>> }): Promise<{ runId: string; queued: number }> {
+  async bulkImport(input: { connectorId: string; twentyObject: string; rows: Array<Record<string, unknown>> }): Promise<{ runId: string; queued: number; failed?: number; firstError?: string }> {
     const pool = this.getPool();
-    const r = await pool.query(
-      `INSERT INTO migration_staging.runs
-         (id, workspace_id, mode, status, started_at, meta)
-       VALUES (
-         gen_random_uuid(),
-         (SELECT workspace_id FROM migration_staging.connectors WHERE id = $1::uuid),
-         'bulk-import', 'pending', NOW(),
-         jsonb_build_object(
-           'connector_id', $1::text,
-           'twenty_object', $2,
-           'source_count', $3::int,
-           'phase', '15c-bulk-import',
-           'triggered_via', 'rest'
+    let runId: string;
+    try {
+      const r = await pool.query(
+        `INSERT INTO migration_staging.runs
+           (id, workspace_id, mode, status, started_at, meta)
+         VALUES (
+           gen_random_uuid(),
+           (SELECT workspace_id FROM migration_staging.connectors WHERE id = $1::uuid),
+           'bulk-import', 'pending', NOW(),
+           jsonb_build_object(
+             'connector_id', $1::text,
+             'twenty_object', $2,
+             'source_count', $3::int,
+             'phase', '15c-bulk-import',
+             'triggered_via', 'rest'
+           )
          )
-       )
-       RETURNING id::text AS id`,
-      [input.connectorId, input.twentyObject, input.rows.length],
-    );
-    const runId = r.rows[0].id as string;
+         RETURNING id::text AS id`,
+        [input.connectorId, input.twentyObject, input.rows.length],
+      );
+      runId = r.rows[0].id as string;
+    } catch (e) {
+      const msg = (e as Error).message;
+      this.logger.error(`bulkImport run-insert failed: ${msg}`);
+      throw new Error(`bulk-import:run-insert: ${msg}`);
+    }
     let index = 0;
+    let failed = 0;
+    let firstError: string | undefined;
     for (const row of input.rows) {
       const naturalKey = (row.natural_key as string) ?? null;
       const externalId = (row.external_id as string) ?? naturalKey ?? `bulk-${runId}-${index}`;
-      await pool.query(
-        `INSERT INTO migration_staging.normalized_rows
-           (run_id, twenty_object, external_id, twenty_id, natural_key, source, row_json)
-         VALUES ($1::uuid, $2, $3, gen_random_uuid(), $4, 'bulk-import', $5::jsonb)
-         ON CONFLICT (run_id, twenty_object, external_id) DO UPDATE
-           SET row_json = EXCLUDED.row_json, built_at = NOW()`,
-        [runId, input.twentyObject, externalId, naturalKey, JSON.stringify(row)],
-      );
+      try {
+        await pool.query(
+          `INSERT INTO migration_staging.normalized_rows
+             (run_id, twenty_object, external_id, twenty_id, natural_key, source, row_json)
+           VALUES ($1::uuid, $2, $3, gen_random_uuid(), $4, 'bulk-import', $5::jsonb)
+           ON CONFLICT (run_id, twenty_object, external_id) DO UPDATE
+             SET row_json = EXCLUDED.row_json, built_at = NOW()`,
+          [runId, input.twentyObject, externalId, naturalKey, JSON.stringify(row)],
+        );
+      } catch (e) {
+        failed += 1;
+        const msg = (e as Error).message;
+        if (firstError === undefined) firstError = `idx=${index}: ${msg}`;
+        this.logger.error(`bulkImport row-insert failed idx=${index}: ${msg}`);
+      }
       index += 1;
     }
-    return { runId, queued: input.rows.length };
+    return { runId, queued: input.rows.length - failed, failed, firstError };
   }
 
   async recentSyncs(connectorId: string | null, limit = 50): Promise<SyncDto[]> {
