@@ -81,7 +81,7 @@ export class SyncService {
     return rows[0] ?? null;
   }
 
-  async bulkImport(input: { connectorId: string; twentyObject: string; rows: Array<Record<string, unknown>> }): Promise<{ runId: string; queued: number; failed?: number; firstError?: string }> {
+  async bulkImport(input: { connectorId: string; twentyObject: string; rows: Array<Record<string, unknown>> }): Promise<{ runId: string | null; queued: number; failed?: number; firstError?: string; phase?: string }> {
     const pool = this.getPool();
     let runId: string;
     try {
@@ -107,7 +107,7 @@ export class SyncService {
     } catch (e) {
       const msg = (e as Error).message;
       this.logger.error(`bulkImport run-insert failed: ${msg}`);
-      throw new Error(`bulk-import:run-insert: ${msg}`);
+      return { runId: null, queued: 0, failed: input.rows.length, firstError: msg, phase: 'run-insert' };
     }
     let index = 0;
     let failed = 0;
