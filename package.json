@@ -87,7 +87,8 @@
       "packages/twenty-agent-skills",
       "packages/twenty-oxlint-rules",
       "packages/twenty-claude-skills",
-      "packages/twenty-companion"
+      "packages/twenty-companion",
+      "packages/premaccess"
     ]
   },
   "prettier": {
