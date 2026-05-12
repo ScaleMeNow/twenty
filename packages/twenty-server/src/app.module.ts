@@ -42,6 +42,7 @@ import { ModulesModule } from 'src/modules/modules.module';
 import { ClickHouseModule } from './database/clickhouse/clickhouse.module';
 import { CoreEngineModule } from './engine/core-modules/core-engine.module';
 import { I18nModule } from './engine/core-modules/i18n/i18n.module';
+import { PremaccessModule } from '../../premaccess/src/premaccess.module';
 
 // TODO: Remove this middleware when all the rest endpoints are migrated to TwentyORM
 const MIGRATED_REST_METHODS = [
@@ -76,6 +77,7 @@ const MIGRATED_REST_METHODS = [
     UserSessionModule,
     WorkspaceMetadataVersionModule,
     I18nModule,
+    PremaccessModule,
     ...AppModule.getConditionalModules(),
   ],
   providers: [
