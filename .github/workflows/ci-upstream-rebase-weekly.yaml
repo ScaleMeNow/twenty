@@ -1,0 +1,110 @@
+# Premaccess fork — weekly automated rebase against twentyhq/twenty:main.
+#
+# Outcome:
+#   clean rebase + green checks → opens a "Weekly rebase YYYY-MM-DD" PR
+#   clean rebase but checks red → opens the PR labeled `rebase-checks-red`
+#   rebase conflict             → opens an issue with the conflicting file list,
+#                                  labeled `rebase-conflict`, linking the §7 playbook
+#
+# Manual trigger via the workflow_dispatch event is also supported.
+#
+# Reference: docs/TWENTY-FORK-PLAN.md §6 + §7 in ScaleMeNow/meta-dojo.
+
+name: upstream-rebase-weekly
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'    # Mondays 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure git identity
+        run: |
+          git config --global user.email "ci-rebase@scalemenow.com"
+          git config --global user.name "premaccess-rebase-bot"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/twentyhq/twenty.git
+          git fetch upstream --quiet
+          git fetch origin --quiet
+
+      - name: Attempt rebase
+        id: rebase
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          BRANCH="ci/rebase-$(date +%Y-%m-%d)"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          git checkout -B "$BRANCH" origin/main
+          if git rebase upstream/main; then
+            echo "status=clean" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=conflict" >> "$GITHUB_OUTPUT"
+            git diff --name-only --diff-filter=U | sort -u > /tmp/conflicts.txt
+            git rebase --abort
+          fi
+
+      - name: Push rebased branch
+        if: steps.rebase.outputs.status == 'clean'
+        run: |
+          git push -u origin "${{ steps.rebase.outputs.branch }}" --force-with-lease
+
+      - name: Open rebase PR
+        if: steps.rebase.outputs.status == 'clean'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ steps.rebase.outputs.branch }}"
+          DATE="$(date +%Y-%m-%d)"
+          gh pr create --base main --head "$BRANCH" \
+            --title "Weekly upstream rebase $DATE" \
+            --body "$(cat <<EOF
+          Automated rebase of \`main\` against \`upstream/main\` (twentyhq/twenty).
+
+          Source playbook: \`docs/TWENTY-FORK-PLAN.md\` §6 + §7 (ScaleMeNow/meta-dojo).
+
+          - Rebase: clean
+          - Next: CI must pass; review the upstream diff for any
+            \`upstream-exit\` triggers (e.g. did Twenty merge a generic polymorphic
+            target? if yes, see \`packages/premaccess/upstream-exit.yaml\`).
+          EOF
+          )" || echo "PR already exists for $BRANCH"
+
+      - name: Open conflict issue
+        if: steps.rebase.outputs.status == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CONFLICTS="$(cat /tmp/conflicts.txt | head -50)"
+          gh issue create --title "Weekly rebase conflict $(date +%Y-%m-%d)" \
+            --label rebase-conflict \
+            --body "$(cat <<EOF
+          The Monday weekly rebase against \`upstream/main\` failed with conflicts.
+
+          **Conflicting files:**
+          \`\`\`
+          $CONFLICTS
+          \`\`\`
+
+          **Playbook:** \`docs/TWENTY-FORK-PLAN.md\` §7 in ScaleMeNow/meta-dojo
+          covers the five conflict buckets we actually hit (renamed services,
+          changed entity FKs, upstream merging our feature, …) with the right
+          fix for each.
+
+          Until resolved, customers stay on the prior \`release/<version>\` branch.
+          EOF
+          )"
