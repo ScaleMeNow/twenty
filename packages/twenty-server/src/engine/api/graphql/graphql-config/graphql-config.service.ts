@@ -28,6 +28,7 @@ import { type FlatWorkspace } from 'src/engine/core-modules/workspace/types/flat
 import { DataloaderService } from 'src/engine/dataloaders/dataloader.service';
 import { renderApolloPlayground } from 'src/engine/utils/render-apollo-playground.util';
 import { ModulesModule } from 'src/modules/modules.module';
+import { PremaccessModule } from 'premaccess';
 
 export interface GraphQLContext extends YogaDriverServerContext<'express'> {
   user?: FlatAuthContextUser;
@@ -82,7 +83,7 @@ export class GraphQLConfigService implements GqlOptionsFactory<
 
     const config: YogaDriverConfig = {
       autoSchemaFile: true,
-      include: [CoreEngineModule, ModulesModule],
+      include: [CoreEngineModule, ModulesModule, PremaccessModule],
       resolverSchemaScope: 'core',
       buildSchemaOptions: {},
       resolvers: { JSON: GraphQLJSON },
