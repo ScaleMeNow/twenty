@@ -1,0 +1,85 @@
+# Premaccess fork CI gate — enforces "touch ≤ 1 upstream file" on every PR.
+#
+# This is the load-bearing rule of the fork strategy (docs/TWENTY-FORK-PLAN.md
+# §4 in ScaleMeNow/meta-dojo). Without this gate, the fork accumulates
+# unrelated upstream edits and rebase against twentyhq/twenty's main eventually
+# becomes intractable. With it, the rebase tax stays ~0 because our diff
+# vs upstream is always a small known set.
+#
+# Allowed deltas vs upstream/main:
+#   - packages/twenty-server/src/app.module.ts:   ≤ 2 added lines
+#   - packages/twenty-front/src/App.tsx:           ≤ 1 added line  (or src/index.tsx)
+#   - anything under packages/premaccess/:         unrestricted
+#   - anything under packages/twenty-front/src/extensions/premaccess/: unrestricted
+
+name: premaccess-fork-gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0           # need history to diff vs upstream/main
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/twentyhq/twenty.git
+          git fetch upstream --quiet
+
+      - name: Enforce extension-only invariant
+        run: |
+          set -euo pipefail
+          # Collect modified files vs upstream/main, excluding our extension paths.
+          mapfile -t TOUCHED < <(
+            git diff --name-only "upstream/main"...HEAD -- \
+              ':!packages/premaccess/' \
+              ':!packages/twenty-front/src/extensions/premaccess/' \
+              ':!.github/workflows/ci-premaccess-*' \
+              ':!.github/workflows/ci-upstream-rebase-*' \
+            | sort -u
+          )
+
+          declare -A ALLOWED=(
+            ["packages/twenty-server/src/app.module.ts"]=2
+            ["packages/twenty-front/src/App.tsx"]=1
+            ["packages/twenty-front/src/index.tsx"]=1
+          )
+
+          violations=0
+          for f in "${TOUCHED[@]}"; do
+            [ -z "$f" ] && continue
+            cap="${ALLOWED[$f]:-}"
+            if [ -z "$cap" ]; then
+              echo "::error file=$f::upstream file modified outside the two allowed locations"
+              violations=$((violations + 1))
+              continue
+            fi
+            added="$(git diff --numstat "upstream/main"...HEAD -- "$f" | awk '{print $1}')"
+            added="${added:-0}"
+            if [ "$added" -gt "$cap" ]; then
+              echo "::error file=$f::has $added added lines vs upstream (cap: $cap)"
+              violations=$((violations + 1))
+            else
+              echo "OK: $f (+$added line(s) ≤ cap $cap)"
+            fi
+          done
+
+          if [ "$violations" -gt 0 ]; then
+            echo
+            echo "Fork CI gate FAILED: $violations violation(s)."
+            echo "Move the change under packages/premaccess/ or packages/twenty-front/src/extensions/premaccess/."
+            echo "See docs/TWENTY-FORK-PLAN.md §4 (ScaleMeNow/meta-dojo)."
+            exit 1
+          fi
+          echo
+          echo "Fork CI gate passed (${#TOUCHED[@]} upstream file(s) touched, all within caps)."
