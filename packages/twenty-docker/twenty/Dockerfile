@@ -33,8 +33,9 @@ COPY ./packages/twenty-server/package.json /app/packages/twenty-server/
 COPY ./packages/twenty-server/patches /app/packages/twenty-server/patches
 COPY ./packages/twenty-shared/package.json /app/packages/twenty-shared/
 COPY ./packages/twenty-client-sdk/package.json /app/packages/twenty-client-sdk/
+COPY ./packages/premaccess/package.json /app/packages/premaccess/
 
-RUN yarn workspaces focus twenty twenty-server twenty-emails twenty-shared twenty-client-sdk && yarn cache clean && npx nx reset
+RUN yarn workspaces focus twenty twenty-server twenty-emails twenty-shared twenty-client-sdk premaccess && yarn cache clean && npx nx reset
 
 
 FROM server-deps AS twenty-server-build
@@ -42,6 +43,7 @@ FROM server-deps AS twenty-server-build
 COPY ./packages/twenty-emails /app/packages/twenty-emails
 COPY ./packages/twenty-shared /app/packages/twenty-shared
 COPY ./packages/twenty-client-sdk /app/packages/twenty-client-sdk
+COPY ./packages/premaccess /app/packages/premaccess
 COPY ./packages/twenty-server /app/packages/twenty-server
 
 RUN npx nx run twenty-server:lingui:extract && \
