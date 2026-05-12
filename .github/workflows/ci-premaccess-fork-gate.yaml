@@ -51,6 +51,7 @@ jobs:
 
           declare -A ALLOWED=(
             ["packages/twenty-server/src/app.module.ts"]=2
+            ["packages/twenty-server/src/engine/api/graphql/graphql-config/graphql-config.service.ts"]=2
             ["packages/twenty-front/src/App.tsx"]=1
             ["packages/twenty-front/src/index.tsx"]=1
             ["package.json"]=2
