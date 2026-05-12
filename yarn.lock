@@ -46723,6 +46723,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"premaccess@workspace:packages/premaccess":
+  version: 0.0.0-use.local
+  resolution: "premaccess@workspace:packages/premaccess"
+  peerDependencies:
+    "@nestjs/common": "*"
+    "@nestjs/graphql": "*"
+    reflect-metadata: "*"
+  languageName: unknown
+  linkType: soft
+
 "prepend-http@npm:^2.0.0":
   version: 2.0.0
   resolution: "prepend-http@npm:2.0.0"
