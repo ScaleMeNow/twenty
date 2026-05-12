@@ -46,6 +46,8 @@ COPY ./packages/twenty-client-sdk /app/packages/twenty-client-sdk
 COPY ./packages/premaccess /app/packages/premaccess
 COPY ./packages/twenty-server /app/packages/twenty-server
 
+RUN cd packages/premaccess && yarn run build && cd /app
+
 RUN npx nx run twenty-server:lingui:extract && \
     npx nx run twenty-server:lingui:compile && \
     npx nx run twenty-emails:lingui:extract && \
@@ -115,6 +117,8 @@ COPY --chown=1000 --from=twenty-server-build /app/packages/twenty-emails/package
 COPY --chown=1000 --from=twenty-server-build /app/packages/twenty-emails/dist /app/packages/twenty-emails/dist
 COPY --chown=1000 --from=twenty-server-build /app/packages/twenty-client-sdk/package.json /app/packages/twenty-client-sdk/
 COPY --chown=1000 --from=twenty-server-build /app/packages/twenty-client-sdk/dist /app/packages/twenty-client-sdk/dist
+COPY --chown=1000 --from=twenty-server-build /app/packages/premaccess/package.json /app/packages/premaccess/
+COPY --chown=1000 --from=twenty-server-build /app/packages/premaccess/dist /app/packages/premaccess/dist
 
 LABEL org.opencontainers.image.source=https://github.com/twentyhq/twenty
 LABEL org.opencontainers.image.description="Twenty server image (no frontend)."
