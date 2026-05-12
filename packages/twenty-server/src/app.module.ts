@@ -36,7 +36,7 @@ import { ModulesModule } from 'src/modules/modules.module';
 
 import { ClickHouseModule } from './database/clickhouse/clickhouse.module';
 import { CoreEngineModule } from './engine/core-modules/core-engine.module';
-import { PremaccessModule } from '../../premaccess/src/premaccess.module';
+import { PremaccessModule } from 'premaccess';
 
 // TODO: Remove this middleware when all the rest endpoints are migrated to TwentyORM
 const MIGRATED_REST_METHODS = [
