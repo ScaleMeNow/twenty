@@ -1,3 +1,4 @@
+import { PremaccessApp } from '@/extensions/premaccess/PremaccessApp';
 import { AppRouterProviders } from '@/app/components/AppRouterProviders';
 import { LazyRoute } from '@/app/components/LazyRoute';
 import { SettingsRoutes } from '@/app/components/SettingsRoutes';
@@ -209,6 +210,7 @@ export const useCreateAppRouter = (
               </LazyRoute>
             }
           />
+          <Route path="/premaccess/*" element={<PremaccessApp />} />
           <Route path={indexAppPath.getIndexAppPath()} element={<></>} />
           <Route
             path={AppPath.RecordIndexPage}
