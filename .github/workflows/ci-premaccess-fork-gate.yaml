@@ -55,6 +55,7 @@ jobs:
             ["packages/twenty-front/src/index.tsx"]=1
             ["package.json"]=2
             ["packages/twenty-docker/twenty/Dockerfile"]=4
+            ["yarn.lock"]=50
           )
 
           violations=0
