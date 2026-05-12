@@ -46,7 +46,7 @@ COPY ./packages/twenty-client-sdk /app/packages/twenty-client-sdk
 COPY ./packages/premaccess /app/packages/premaccess
 COPY ./packages/twenty-server /app/packages/twenty-server
 
-RUN npx -y typescript@5.9.2 tsc -p packages/premaccess/tsconfig.json
+RUN node_modules/.bin/tsc -p packages/premaccess/tsconfig.json
 
 RUN npx nx run twenty-server:lingui:extract && \
     npx nx run twenty-server:lingui:compile && \
