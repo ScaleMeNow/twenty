@@ -13,6 +13,7 @@ import { LazyRoute } from '@/app/components/LazyRoute';
 import { SettingsRoutes } from '@/app/components/SettingsRoutes';
 import { WorkspaceAppProviders } from '@/app/components/WorkspaceAppProviders';
 import { VerifyEmail } from '@/auth/components/VerifyEmail';
+import { PremaccessApp } from '@/extensions/premaccess/PremaccessApp';
 import { MinimalMetadataGate } from '@/metadata-store/components/MinimalMetadataGate';
 import indexAppPath from '@/navigation/utils/indexAppPath';
 import { OnboardingActivationOutlet } from '@/onboarding/components/OnboardingActivationOutlet';
@@ -178,6 +179,7 @@ const createWorkspaceAppRouter = ({
                   }
                 />
               )}
+              <Route path="/premaccess/*" element={<PremaccessApp />} />
               <Route
                 path={indexAppPath.getIndexAppPath()}
                 element={<RecordIndexSkeletonLoader />}

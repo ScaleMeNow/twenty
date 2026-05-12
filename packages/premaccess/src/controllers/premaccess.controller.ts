@@ -69,4 +69,12 @@ export class PremaccessController {
   async rejectBelow(@Body() body: { runId: string; confidence: number }) {
     return { deleted: await this.sync.rejectInferredEdgesBelow(body.runId, body.confidence) };
   }
+
+  @Post('connectors/:id/bulk-import')
+  async bulkImport(
+    @Param('id') id: string,
+    @Body() body: { twentyObject: string; rows: Array<Record<string, unknown>> },
+  ) {
+    return this.sync.bulkImport({ connectorId: id, twentyObject: body.twentyObject, rows: body.rows });
+  }
 }
