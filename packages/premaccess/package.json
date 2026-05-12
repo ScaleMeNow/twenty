@@ -1,14 +1,11 @@
 {
   "name": "premaccess",
-  "description": "Premaccess extension module for Twenty fork (Phase 15+ — see TWENTY-FORK-PLAN.md in ScaleMeNow/meta-dojo).",
+  "description": "Premaccess extension module for Twenty fork (Phase 15+ \u2014 see TWENTY-FORK-PLAN.md in ScaleMeNow/meta-dojo).",
   "version": "0.1.0",
   "private": true,
   "license": "UNLICENSED",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc -p tsconfig.json"
-  },
   "peerDependencies": {
     "@nestjs/common": "*",
     "@nestjs/graphql": "*",
