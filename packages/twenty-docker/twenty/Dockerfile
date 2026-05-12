@@ -60,7 +60,7 @@ RUN npx nx run twenty-server:build
 RUN find /app/packages/twenty-server/dist -name '*.d.ts' -delete \
  && rm -rf /app/packages/twenty-server/dist/packages/twenty-server/test
 
-RUN yarn workspaces focus --production twenty-emails twenty-shared twenty-client-sdk twenty-server
+RUN yarn workspaces focus --production twenty-emails twenty-shared twenty-client-sdk twenty-server premaccess
 
 
 FROM front-deps AS twenty-front-build
