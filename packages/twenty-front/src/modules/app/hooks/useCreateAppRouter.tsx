@@ -1,4 +1,4 @@
-import { PremaccessApp } from '@/extensions/premaccess/PremaccessApp';
+import { PremaccessApp } from '~/extensions/premaccess/PremaccessApp';
 import { AppRouterProviders } from '@/app/components/AppRouterProviders';
 import { LazyRoute } from '@/app/components/LazyRoute';
 import { SettingsRoutes } from '@/app/components/SettingsRoutes';
