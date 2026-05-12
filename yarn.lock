@@ -42841,6 +42841,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"premaccess@workspace:packages/premaccess":
+  version: 0.0.0-use.local
+  resolution: "premaccess@workspace:packages/premaccess"
+  peerDependencies:
+    "@nestjs/common": "*"
+    "@nestjs/graphql": "*"
+    reflect-metadata: "*"
+  languageName: unknown
+  linkType: soft
+
 "prettier@npm:3.6.2":
   version: 3.6.2
   resolution: "prettier@npm:3.6.2"
