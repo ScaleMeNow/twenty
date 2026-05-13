@@ -4,47 +4,73 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { createHash } from 'crypto';
 import jwt from 'jsonwebtoken';
 import type { Request } from 'express';
 
 /**
  * Authenticate every /_premaccess/* request against Twenty's JWT.
  *
- * Twenty signs access tokens with HS256(APP_SECRET) — same secret backing the
- * GraphQL/metadata endpoints. We verify the same way so a request reaching
- * the Premaccess controller is provably from an authenticated Twenty session,
- * not an anonymous probe.
+ * Twenty does not sign access tokens with the raw APP_SECRET. Instead it
+ * derives a per-workspace secret:
+ *
+ *     sha256(APP_SECRET + workspaceId + 'ACCESS').hexdigest()
+ *
+ * — see packages/twenty-server/src/engine/core-modules/jwt/services/
+ * jwt-wrapper.service.ts::generateAppSecret. We mirror that here: decode the
+ * token (no verify) to read the workspaceId from the payload, derive the
+ * same secret, then verify the signature against it. Stays in lockstep with
+ * Twenty's own auth pipeline so a token accepted by /metadata is also
+ * accepted by /_premaccess/*.
  *
  * Token source order:
- *   1. `Authorization: Bearer <jwt>` header (preferred, used when the SPA
- *      explicitly forwards the access token)
- *   2. `tokenPair` cookie set by Twenty's front (Jotai cookieStorage atom in
- *      twenty-front/src/modules/auth/states/tokenPairState.ts)
- *
- * The decoded payload is attached to req.premaccessAuth for downstream
- * handlers that want workspaceId / userId without re-decoding.
+ *   1. `Authorization: Bearer <jwt>` header (PremaccessApp.tsx fetch wrapper)
+ *   2. `tokenPair` cookie set by Twenty's front (tokenPairState.ts)
  */
 @Injectable()
 export class PremaccessAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<Request & { premaccessAuth?: jwt.JwtPayload }>();
+    const req = context.switchToHttp().getRequest<
+      Request & { premaccessAuth?: jwt.JwtPayload }
+    >();
     const token = this.extractToken(req);
 
     if (token === null) {
       throw new UnauthorizedException('Premaccess: no auth token');
     }
 
-    const secret = process.env.APP_SECRET;
-    if (secret === undefined || secret === '') {
+    const appSecret = process.env.APP_SECRET;
+    if (appSecret === undefined || appSecret === '') {
       throw new UnauthorizedException('Premaccess: APP_SECRET not configured');
     }
 
+    let decoded: jwt.JwtPayload;
     try {
-      const payload = jwt.verify(token, secret, { algorithms: ['HS256'] }) as jwt.JwtPayload;
-      req.premaccessAuth = payload;
+      decoded = jwt.decode(token, { json: true }) as jwt.JwtPayload;
+    } catch {
+      throw new UnauthorizedException('Premaccess: cannot decode token');
+    }
+    if (decoded === null || typeof decoded !== 'object') {
+      throw new UnauthorizedException('Premaccess: invalid token payload');
+    }
+
+    const tokenType = (decoded.type as string) ?? 'ACCESS';
+    const appSecretBody = (decoded.workspaceId as string) ?? (decoded.userId as string);
+    if (appSecretBody === undefined) {
+      throw new UnauthorizedException('Premaccess: token missing workspaceId/userId');
+    }
+    const derivedSecret = createHash('sha256')
+      .update(`${appSecret}${appSecretBody}${tokenType}`)
+      .digest('hex');
+
+    try {
+      const verified = jwt.verify(token, derivedSecret, { algorithms: ['HS256'] }) as jwt.JwtPayload;
+      req.premaccessAuth = verified;
       return true;
     } catch (e) {
-      throw new UnauthorizedException(`Premaccess: invalid token — ${(e as Error).message}`);
+      throw new UnauthorizedException(
+        `Premaccess: invalid token — ${(e as Error).message}`,
+      );
     }
   }
 
