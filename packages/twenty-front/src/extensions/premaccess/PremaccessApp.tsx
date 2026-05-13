@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
  * Every section has inline help, every column header carries a tooltip, and
  * every form shows a working example so workers can copy/paste their way to
  * autonomy. The full reference is mirrored in the on-page Docs panel at the
- * bottom; the canonical version lives in docs/MIGRATION-RUNBOOK.md.
+ * bottom; full reference docs live separately in the meta-dojo workspace.
  */
 
 type Connector = {
@@ -86,8 +86,15 @@ const styles = {
     padding: '24px 28px',
     fontFamily: 'Inter, system-ui, sans-serif',
     color: 'var(--t-font-color-primary, #f3f3f3)',
-    minHeight: '100%',
+    height: '100%',
+    overflowY: 'auto' as const,
+    overflowX: 'hidden' as const,
+    boxSizing: 'border-box' as const,
+    width: '100%',
+  } as const,
+  pageInner: {
     maxWidth: 1280,
+    margin: '0 auto',
   } as const,
   h1: { fontSize: 22, fontWeight: 600, marginBottom: 4 } as const,
   subtitle: { color: 'var(--t-font-color-tertiary, #888)', marginTop: 0, fontSize: 13, marginBottom: 16 } as const,
@@ -219,7 +226,7 @@ const styles = {
     borderRadius: 3,
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
     fontSize: 12,
-    color: '#fde047',
+    color: 'var(--t-font-color-secondary)',
   } as const,
   codeBlock: {
     background: 'var(--t-background-secondary, #0f1419)',
@@ -238,7 +245,7 @@ const styles = {
 const pillFor = (status: string) => {
   const palette: Record<string, { bg: string; fg: string }> = {
     active: { bg: 'rgba(34,197,94,0.15)', fg: '#86efac' },
-    pending: { bg: 'rgba(234,179,8,0.15)', fg: '#fde047' },
+    pending: { bg: 'rgba(234,179,8,0.18)', fg: '#a16207' },
     failed: { bg: 'rgba(220,38,38,0.15)', fg: '#fca5a5' },
     completed: { bg: 'rgba(59,130,246,0.15)', fg: '#93c5fd' },
     'bulk-import': { bg: 'rgba(168,85,247,0.15)', fg: '#d8b4fe' },
@@ -249,9 +256,32 @@ const pillFor = (status: string) => {
 
 type TabKey = 'overview' | 'mappings' | 'bulk' | 'inferred' | 'docs';
 
+const InfoIcon = ({ tip }: { tip: string }) => (
+  <span
+    title={tip}
+    aria-label={tip}
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 4,
+      verticalAlign: 'middle',
+      cursor: 'help',
+      opacity: 0.55,
+    }}
+  >
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="8" cy="5" r="0.9" fill="currentColor" />
+      <rect x="7.3" y="7" width="1.4" height="5" rx="0.6" fill="currentColor" />
+    </svg>
+  </span>
+);
+
 const Th = ({ children, tip }: { children: React.ReactNode; tip: string }) => (
   <th style={styles.th} title={tip}>
-    {children} <span style={{ opacity: 0.4, fontSize: 10 }}>ⓘ</span>
+    {children}
+    <InfoIcon tip={tip} />
   </th>
 );
 
@@ -308,6 +338,7 @@ export const PremaccessApp = () => {
 
   return (
     <div style={styles.page}>
+      <div style={styles.pageInner}>
       <div style={styles.h1}>Premaccess — CRM Sync Console</div>
       <div style={styles.subtitle}>
         Operator console for CRM-Manager autonomy. Workspace {WORKSPACE_ID}.
@@ -321,9 +352,8 @@ export const PremaccessApp = () => {
         explicitly. You approve or reject those before they touch the workspace.
         <br />
         <span style={{ color: 'var(--t-font-color-tertiary, #888)' }}>
-          Need the canonical reference? See <code style={styles.code}>docs/MIGRATION-RUNBOOK.md</code>
-          {' '}and{' '}
-          <code style={styles.code}>migration/MIGRATION_WORKFLOW.md</code> in the meta-dojo repo.
+          Need the full reference? Open the Docs tab — quick reference for the
+          happy path, cURL examples, and troubleshooting.
         </span>
       </div>
 
@@ -442,6 +472,7 @@ export const PremaccessApp = () => {
       )}
 
       {tab === 'docs' && <DocsTab />}
+      </div>
     </div>
   );
 };
@@ -469,14 +500,14 @@ const OverviewTab = ({
           + Connect a new source CRM
         </div>
         <div style={styles.sectionHelp}>
-          Pick the source CRM and give it a memorable display name. Credentials are configured
-          separately in the source connector's README (HubSpot needs a private-app token, for
-          instance — see <code style={styles.code}>migration/connectors/hubspot/README.md</code>).
+          Pick the source CRM and give it a memorable display name. Credentials
+          for the source are configured separately by an admin before the
+          connector can run — ask if you don't have them yet.
         </div>
         <div style={{ ...styles.formGrid, marginTop: 12 }}>
           <div>
-            <label style={styles.label} title="The connector kind. Must match a registered connector in migration/connectors/.">
-              Source ⓘ
+            <label style={styles.label}>
+              Source <InfoIcon tip="Source CRM type. Pick the system you're pulling data from." />
             </label>
             <select style={styles.input} value={source} onChange={(e) => setSource(e.target.value)}>
               <option value="hubspot">hubspot</option>
@@ -489,8 +520,8 @@ const OverviewTab = ({
             </select>
           </div>
           <div>
-            <label style={styles.label} title="Free-text name shown in the connectors list. Pick something CRM workers will recognise (e.g. 'HubSpot Prod', 'HubSpot Sandbox').">
-              Display name ⓘ
+            <label style={styles.label}>
+              Display name <InfoIcon tip="Free-text name shown in the connectors list. Pick something colleagues will recognise (e.g. 'HubSpot Prod', 'HubSpot Sandbox')." />
             </label>
             <input
               style={styles.input}
@@ -688,14 +719,14 @@ const MappingsTab = ({
       <div style={styles.formCard}>
         <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>Field mapping override</div>
         <div style={styles.sectionHelp}>
-          Decide what happens to a source property at load time. Default rules live in{' '}
-          <code style={styles.code}>migration/connectors/&lt;source&gt;/mapping.yaml</code> — what you
-          set here overrides them per connector.
+          Decide what happens to a source property at load time. Each connector
+          ships with sensible defaults — overrides set here apply only to this
+          connector and win at sync time.
         </div>
         <div style={styles.formGrid}>
           <div>
-            <label style={styles.label} title="Twenty target object: company, person, opportunity, task, note, …">
-              Twenty object ⓘ
+            <label style={styles.label}>
+              Twenty object <InfoIcon tip="Which Twenty table the source property lands on: company, person, opportunity, task, note." />
             </label>
             <select style={styles.input} value={twentyObject} onChange={(e) => setTwentyObject(e.target.value)}>
               <option>company</option>
@@ -706,8 +737,8 @@ const MappingsTab = ({
             </select>
           </div>
           <div>
-            <label style={styles.label} title="The source CRM property name exactly as it appears in the source API (e.g. 'hs_lead_status' on HubSpot).">
-              Source property ⓘ
+            <label style={styles.label}>
+              Source property <InfoIcon tip="The source CRM property name exactly as it appears in the source (e.g. 'hs_lead_status' on HubSpot)." />
             </label>
             <input
               style={styles.input}
@@ -717,11 +748,8 @@ const MappingsTab = ({
             />
           </div>
           <div>
-            <label
-              style={styles.label}
-              title="alias = map to an existing Twenty field. custom = create a new custom field in Twenty. ignore = drop on load."
-            >
-              Action ⓘ
+            <label style={styles.label}>
+              Action <InfoIcon tip="alias = map to an existing Twenty field. custom = create a new custom field in Twenty. ignore = drop the property on load." />
             </label>
             <select style={styles.input} value={action} onChange={(e) => setAction(e.target.value)}>
               <option value="alias">alias → existing field</option>
@@ -730,11 +758,13 @@ const MappingsTab = ({
             </select>
           </div>
           <div>
-            <label
-              style={styles.label}
-              title="Required for 'alias' (target field name on Twenty side, e.g. 'leadStatus'). Required for 'custom' (new field name). Leave empty for 'ignore'."
-            >
-              Twenty field {action === 'ignore' ? '(unused)' : '⓮'}
+            <label style={styles.label}>
+              Twenty field{' '}
+              {action === 'ignore' ? (
+                <span style={{ opacity: 0.5 }}>(unused)</span>
+              ) : (
+                <InfoIcon tip="Required for 'alias' — the existing field name on Twenty (e.g. 'leadStatus'). Required for 'custom' — the new field name to create. Leave empty for 'ignore'." />
+              )}
             </label>
             <input
               style={styles.input}
@@ -771,11 +801,9 @@ const MappingsTab = ({
         </div>
         <div style={styles.formGrid}>
           <div>
-            <label
-              style={styles.label}
-              title="Native association name from the source CRM. Format: <left>:<right> using the source's object names. E.g. HubSpot 'companies:contacts'."
-            >
-              Native pair ⓘ
+            <label style={styles.label}>
+              Native pair{' '}
+              <InfoIcon tip="Native association name from the source. Format: left:right using the source's object names. E.g. HubSpot 'companies:contacts'." />
             </label>
             <input
               style={styles.input}
@@ -785,11 +813,9 @@ const MappingsTab = ({
             />
           </div>
           <div>
-            <label
-              style={styles.label}
-              title="Canonical Twenty semantic name. Used by the universal association graph (Phase 13 — see docs/ASSOCIATION-GRAPH.md). Examples: employs, attended_by, owned_by."
-            >
-              Semantic name ⓘ
+            <label style={styles.label}>
+              Semantic name{' '}
+              <InfoIcon tip="Canonical Twenty semantic name used by the universal association graph. Examples: employs, attended_by, owned_by." />
             </label>
             <input
               style={styles.input}
@@ -1068,21 +1094,20 @@ const DocsTab = () => (
     <div style={{ ...styles.sectionTitle, marginBottom: 12 }}>Docs · quick reference</div>
 
     <details open style={{ marginBottom: 10 }}>
-      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>What lives where?</summary>
+      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Concepts in 30 seconds</summary>
       <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
         <li>
-          <code style={styles.code}>migration/</code> — Python ETL package. <code style={styles.code}>python -m migration …</code> from the meta-dojo
-          repo root.
+          <strong>Connector</strong> — one source CRM (HubSpot, Salesforce…) linked
+          to this Twenty workspace. Each gets its own credentials and mappings.
         </li>
         <li>
-          <code style={styles.code}>migration_staging</code> schema on the Twenty RDS — all sync
-          state lives here: <code style={styles.code}>connectors</code>,{' '}
-          <code style={styles.code}>runs</code>, <code style={styles.code}>normalized_rows</code>,{' '}
-          <code style={styles.code}>association_edges</code>, override tables.
+          <strong>Sync run</strong> — a single extract → normalize → load cycle.
+          Always start with a dry-run to see counts before committing.
         </li>
         <li>
-          <code style={styles.code}>/_premaccess/*</code> REST routes — what this UI calls. All
-          authenticated; you need a Twenty session.
+          <strong>Inferred edges</strong> — links Bedrock detects between
+          tasks/notes and people/companies the source CRM didn't connect
+          explicitly. You review and approve them in Tab 4.
         </li>
       </ul>
     </details>
@@ -1128,16 +1153,18 @@ curl -H "Authorization: Bearer $TOKEN" \\
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Troubleshooting</summary>
       <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
         <li>
-          <strong>401 Unauthorized</strong> — your Twenty session expired. Log out and back in.
+          <strong>401 Unauthorized</strong> — your Twenty session expired. Log
+          out and back in.
         </li>
         <li>
-          <strong>Sync stuck at pending</strong> — the worker / CodeBuild step that picks up runs is
-          not wired yet (Phase 18 roadmap). Pending rows are normal until the orchestrator lands.
+          <strong>Sync stuck at pending</strong> — the background worker that
+          picks up runs is not wired yet. Pending rows are normal in the
+          current preview build; ask an admin if it stays pending overnight.
         </li>
         <li>
-          <strong>Bulk import returns failed &gt; 0</strong> — open the firstError field in the
-          response. Most common cause: duplicate <code style={styles.code}>(run_id, twenty_object, external_id)</code>{' '}
-          — make sure your rows have unique natural_keys.
+          <strong>Bulk import returns failed &gt; 0</strong> — open the
+          firstError field in the response. Most common cause: two rows share
+          the same natural_key. Make every row's natural_key unique.
         </li>
         <li>
           <strong>Login screen reappears after deploy</strong> — JWT secret is pinned, but access
