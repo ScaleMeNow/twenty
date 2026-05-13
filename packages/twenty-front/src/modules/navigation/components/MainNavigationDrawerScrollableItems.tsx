@@ -8,6 +8,7 @@ import { lazy, Suspense } from 'react';
 import { isDefined } from 'twenty-shared/utils';
 
 import { themeCssVariables } from 'twenty-ui/theme';
+import { PremaccessNavigationSection } from '~/extensions/premaccess/PremaccessNavigationSection';
 
 const FavoritesSectionDispatcher = lazy(() =>
   import('@/navigation-menu-item/display/sections/favorites/components/FavoritesSectionDispatcher').then(
@@ -73,6 +74,7 @@ export const MainNavigationDrawerScrollableItems = () => {
         <FavoritesSectionDispatcher />
         <WorkspaceSectionDispatcher />
         <NavigationMenuSectionList containerId={null} />
+        <PremaccessNavigationSection />
       </Suspense>
     </StyledScrollableItemsContainer>
   );
