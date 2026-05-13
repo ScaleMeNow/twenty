@@ -11,7 +11,7 @@ import {
   SyncDto,
   SyncModeEnum,
 } from '../dto/connector.dto';
-import { QueueService } from './queue.service';
+import { RunnerClientService } from './runner-client.service';
 
 /**
  * Phase 18 — SyncService.
@@ -29,7 +29,7 @@ export class SyncService {
   private readonly logger = new Logger(SyncService.name);
   private pool: Pool | null = null;
 
-  constructor(private readonly queueService: QueueService) {}
+  constructor(private readonly runner: RunnerClientService) {}
 
   private getPool(): Pool {
     if (this.pool === null) {
@@ -350,27 +350,36 @@ export class SyncService {
     const row = insertRes.rows[0] as { id: string; startedAt: string; workspaceId: string; status: string };
 
     try {
-      const publish = await this.queueService.publishRun({
+      const dispatch = await this.runner.dispatchRun({
         runId: row.id,
         connectorId,
         workspaceId: row.workspaceId,
         mode: mode.toString().toLowerCase(),
         dryRun,
       });
-      if (publish.skipped) {
-        this.logger.log(`run ${row.id} inserted; queue disabled, stays pending`);
+      if (dispatch.skipped) {
+        this.logger.log(`run ${row.id} inserted; runner disabled, stays pending`);
       } else {
-        this.logger.log(`run ${row.id} queued (sqs message ${publish.messageId})`);
+        this.logger.log(`run ${row.id} dispatched (build ${dispatch.buildId})`);
+        if (dispatch.buildId !== null) {
+          await pool.query(
+            `UPDATE migration_staging.runs
+               SET meta = COALESCE(meta, '{}'::jsonb) ||
+                          jsonb_build_object('build_id', $2::text, 'dispatched_at', NOW())
+             WHERE id = $1::uuid`,
+            [row.id, dispatch.buildId],
+          );
+        }
       }
     } catch (e) {
       const msg = (e as Error).message;
-      this.logger.error(`run ${row.id} SQS publish failed: ${msg}`);
+      this.logger.error(`run ${row.id} dispatch failed: ${msg}`);
       await pool.query(
         `UPDATE migration_staging.runs
            SET status = 'failed',
                completed_at = NOW(),
                meta = COALESCE(meta, '{}'::jsonb) ||
-                      jsonb_build_object('error_message', $2::text, 'phase19_publish_failed', true)
+                      jsonb_build_object('error_message', $2::text, 'phase19_dispatch_failed', true)
          WHERE id = $1::uuid`,
         [row.id, msg],
       );
