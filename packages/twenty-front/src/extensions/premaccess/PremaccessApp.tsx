@@ -406,6 +406,19 @@ export const PremaccessApp = () => {
               }),
             )
           }
+          onUpdate={(id, patch) =>
+            wrap('Connector updated', () =>
+              fetchJSON(`/_premaccess/connectors/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(patch),
+              }),
+            )
+          }
+          onDelete={(id) =>
+            wrap('Connector deleted', () =>
+              fetchJSON(`/_premaccess/connectors/${id}`, { method: 'DELETE' }),
+            )
+          }
         />
       )}
 
@@ -429,6 +442,22 @@ export const PremaccessApp = () => {
                 method: 'POST',
                 body: JSON.stringify(body),
               }),
+            )
+          }
+          onFieldDelete={(connectorId, twentyObject, sourceProperty) =>
+            wrap('Field override removed', () =>
+              fetchJSON(
+                `/_premaccess/connectors/${connectorId}/field-mapping?twentyObject=${encodeURIComponent(twentyObject)}&sourceProperty=${encodeURIComponent(sourceProperty)}`,
+                { method: 'DELETE' },
+              ),
+            )
+          }
+          onAssocDelete={(connectorId, nativePair) =>
+            wrap('Association override removed', () =>
+              fetchJSON(
+                `/_premaccess/connectors/${connectorId}/association-mapping?nativePair=${encodeURIComponent(nativePair)}`,
+                { method: 'DELETE' },
+              ),
             )
           }
         />
@@ -493,15 +522,22 @@ const OverviewTab = ({
   busy,
   onCreate,
   onTrigger,
+  onUpdate,
+  onDelete,
 }: {
   connectors: Connector[];
   syncs: Sync[];
   busy: boolean;
   onCreate: (input: { source: string; displayName: string; workspaceId: string }) => Promise<void>;
   onTrigger: (id: string, dryRun: boolean) => Promise<void>;
+  onUpdate: (id: string, patch: { displayName?: string; status?: string }) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }) => {
   const [source, setSource] = useState('hubspot');
   const [displayName, setDisplayName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editStatus, setEditStatus] = useState('active');
 
   return (
     <>
@@ -580,47 +616,124 @@ const OverviewTab = ({
                 </td>
               </tr>
             )}
-            {connectors.map((c) => (
-              <tr key={c.id} style={styles.tdRow}>
-                <td style={styles.td}>{c.source}</td>
-                <td style={styles.td}>{c.displayName}</td>
-                <td style={styles.td}>
-                  <span style={pillFor(c.status)}>{c.status}</span>
-                </td>
-                <td style={styles.td}>{c.fieldOverrideCount}</td>
-                <td style={styles.td}>
-                  {c.lastSyncAt === null ? '—' : new Date(c.lastSyncAt).toLocaleString()}
-                  {c.lastSyncStatus !== null && (
-                    <>
-                      {' '}
-                      <span style={pillFor(c.lastSyncStatus)}>{c.lastSyncStatus}</span>
-                    </>
-                  )}
-                </td>
-                <td style={styles.td}>
-                  <button
-                    style={{ ...styles.btn, marginRight: 6 }}
-                    onClick={() => onTrigger(c.id, true)}
-                    disabled={busy}
-                    title="Dry-run: extract + stage + diff, but rollback before writing to the workspace. Safe on production data."
-                  >
-                    Dry-run sync
-                  </button>
-                  <button
-                    style={styles.btnPrimary}
-                    onClick={() => {
-                      if (window.confirm('Live sync will WRITE to the workspace tables. Continue?')) {
-                        void onTrigger(c.id, false);
-                      }
-                    }}
-                    disabled={busy}
-                    title="Live sync: same as dry-run but commits the load. Always run a dry-run first."
-                  >
-                    Live sync
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {connectors.map((c) => {
+              const editing = editingId === c.id;
+              return (
+                <tr key={c.id} style={styles.tdRow}>
+                  <td style={styles.td}>{c.source}</td>
+                  <td style={styles.td}>
+                    {editing ? (
+                      <input
+                        style={{ ...styles.input, padding: '4px 8px' }}
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                      />
+                    ) : (
+                      c.displayName
+                    )}
+                  </td>
+                  <td style={styles.td}>
+                    {editing ? (
+                      <select
+                        style={{ ...styles.input, padding: '4px 8px' }}
+                        value={editStatus}
+                        onChange={(e) => setEditStatus(e.target.value)}
+                      >
+                        <option value="active">active</option>
+                        <option value="paused">paused</option>
+                        <option value="archived">archived</option>
+                      </select>
+                    ) : (
+                      <span style={pillFor(c.status)}>{c.status}</span>
+                    )}
+                  </td>
+                  <td style={styles.td}>{c.fieldOverrideCount}</td>
+                  <td style={styles.td}>
+                    {c.lastSyncAt === null ? '—' : new Date(c.lastSyncAt).toLocaleString()}
+                    {c.lastSyncStatus !== null && (
+                      <>
+                        {' '}
+                        <span style={pillFor(c.lastSyncStatus)}>{c.lastSyncStatus}</span>
+                      </>
+                    )}
+                  </td>
+                  <td style={styles.td}>
+                    {editing ? (
+                      <>
+                        <button
+                          style={{ ...styles.btnPrimary, marginRight: 6 }}
+                          disabled={busy}
+                          onClick={async () => {
+                            await onUpdate(c.id, { displayName: editName.trim(), status: editStatus });
+                            setEditingId(null);
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          style={styles.btn}
+                          disabled={busy}
+                          onClick={() => setEditingId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          style={{ ...styles.btn, marginRight: 6 }}
+                          onClick={() => {
+                            setEditingId(c.id);
+                            setEditName(c.displayName);
+                            setEditStatus(c.status);
+                          }}
+                          disabled={busy}
+                          title="Edit display name + status. Source cannot be changed."
+                        >
+                          Edit
+                        </button>
+                        <button
+                          style={{ ...styles.btn, marginRight: 6 }}
+                          onClick={() => onTrigger(c.id, true)}
+                          disabled={busy}
+                          title="Dry-run: extract + stage + diff, but rollback before writing to the workspace. Safe on production data."
+                        >
+                          Dry-run sync
+                        </button>
+                        <button
+                          style={{ ...styles.btnPrimary, marginRight: 6 }}
+                          onClick={() => {
+                            if (window.confirm('Live sync will WRITE to the workspace tables. Continue?')) {
+                              void onTrigger(c.id, false);
+                            }
+                          }}
+                          disabled={busy}
+                          title="Live sync: same as dry-run but commits the load. Always run a dry-run first."
+                        >
+                          Live sync
+                        </button>
+                        <button
+                          style={styles.btnDanger}
+                          disabled={busy}
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Delete connector '${c.displayName}'? Its runs + override rows stay in migration_staging, but no further syncs will trigger.`,
+                              )
+                            ) {
+                              void onDelete(c.id);
+                            }
+                          }}
+                          title="Soft-style delete: removes the connector row. Past runs and inferred edges are preserved for audit."
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </section>
@@ -688,6 +801,9 @@ const OverviewTab = ({
   );
 };
 
+type FieldOverride = { twentyObject: string; sourceProperty: string; action: string; twentyField: string | null; updatedAt: string };
+type AssocOverride = { nativePair: string; semanticName: string | null; updatedAt: string };
+
 const MappingsTab = ({
   connectors,
   selectedConnectorId,
@@ -695,6 +811,8 @@ const MappingsTab = ({
   busy,
   onFieldMap,
   onAssocMap,
+  onFieldDelete,
+  onAssocDelete,
 }: {
   connectors: Connector[];
   selectedConnectorId: string | null;
@@ -705,6 +823,8 @@ const MappingsTab = ({
     body: { twentyObject: string; sourceProperty: string; action: string; twentyField?: string },
   ) => Promise<void>;
   onAssocMap: (connectorId: string, body: { nativePair: string; semanticName?: string }) => Promise<void>;
+  onFieldDelete: (connectorId: string, twentyObject: string, sourceProperty: string) => Promise<void>;
+  onAssocDelete: (connectorId: string, nativePair: string) => Promise<void>;
 }) => {
   const [twentyObject, setTwentyObject] = useState('company');
   const [sourceProperty, setSourceProperty] = useState('');
@@ -713,6 +833,29 @@ const MappingsTab = ({
 
   const [nativePair, setNativePair] = useState('');
   const [semanticName, setSemanticName] = useState('');
+
+  const [fieldOverrides, setFieldOverrides] = useState<FieldOverride[]>([]);
+  const [assocOverrides, setAssocOverrides] = useState<AssocOverride[]>([]);
+
+  useEffect(() => {
+    if (selectedConnectorId === null) {
+      setFieldOverrides([]);
+      setAssocOverrides([]);
+      return;
+    }
+    (async () => {
+      try {
+        const [f, a] = await Promise.all([
+          fetchJSON<FieldOverride[]>(`/_premaccess/connectors/${selectedConnectorId}/field-mappings`),
+          fetchJSON<AssocOverride[]>(`/_premaccess/connectors/${selectedConnectorId}/association-mappings`),
+        ]);
+        setFieldOverrides(f);
+        setAssocOverrides(a);
+      } catch {
+        // surface in parent err state via parent fetch already; swallow here
+      }
+    })();
+  }, [selectedConnectorId, busy]);
 
   if (connectors.length === 0)
     return (
@@ -738,6 +881,125 @@ const MappingsTab = ({
           ))}
         </select>
       </div>
+
+      <section style={styles.section}>
+        <div style={styles.sectionHeader}>
+          <div style={styles.sectionTitle}>Current field overrides</div>
+          <div style={styles.sectionHelp}>
+            {fieldOverrides.length} override(s) on this connector. Anything not listed here
+            uses the connector's default mapping.
+          </div>
+        </div>
+        <table style={styles.table}>
+          <thead>
+            <tr style={styles.thRow}>
+              <Th tip="Twenty target table.">Twenty object</Th>
+              <Th tip="Source CRM property name.">Source property</Th>
+              <Th tip="alias / custom / ignore.">Action</Th>
+              <Th tip="Target field name on Twenty (only for alias / custom).">Twenty field</Th>
+              <Th tip="Last write time.">Updated</Th>
+              <th style={styles.th}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {fieldOverrides.length === 0 && (
+              <tr style={styles.tdRow}>
+                <td style={styles.td} colSpan={6}>
+                  No overrides yet. Add one below.
+                </td>
+              </tr>
+            )}
+            {fieldOverrides.map((o, i) => (
+              <tr key={i} style={styles.tdRow}>
+                <td style={styles.td}>{o.twentyObject}</td>
+                <td style={styles.td}>
+                  <code style={styles.code}>{o.sourceProperty}</code>
+                </td>
+                <td style={styles.td}>
+                  <span style={pillFor(o.action === 'ignore' ? 'failed' : o.action === 'alias' ? 'active' : 'completed')}>
+                    {o.action}
+                  </span>
+                </td>
+                <td style={styles.td}>
+                  {o.twentyField === null ? <span style={{ opacity: 0.5 }}>—</span> : <code style={styles.code}>{o.twentyField}</code>}
+                </td>
+                <td style={styles.td}>{new Date(o.updatedAt).toLocaleString()}</td>
+                <td style={styles.td}>
+                  <button
+                    style={styles.btnDanger}
+                    disabled={busy || selectedConnectorId === null}
+                    onClick={() => {
+                      if (
+                        selectedConnectorId !== null &&
+                        window.confirm(`Remove field override ${o.twentyObject}.${o.sourceProperty}?`)
+                      ) {
+                        void onFieldDelete(selectedConnectorId, o.twentyObject, o.sourceProperty);
+                      }
+                    }}
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section style={styles.section}>
+        <div style={styles.sectionHeader}>
+          <div style={styles.sectionTitle}>Current association overrides</div>
+          <div style={styles.sectionHelp}>
+            {assocOverrides.length} override(s). Sets the canonical semantic for native pairs.
+          </div>
+        </div>
+        <table style={styles.table}>
+          <thead>
+            <tr style={styles.thRow}>
+              <Th tip="Source pair, format left:right.">Native pair</Th>
+              <Th tip="Twenty canonical semantic name.">Semantic name</Th>
+              <Th tip="Last write time.">Updated</Th>
+              <th style={styles.th}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {assocOverrides.length === 0 && (
+              <tr style={styles.tdRow}>
+                <td style={styles.td} colSpan={4}>
+                  No overrides yet. Add one below.
+                </td>
+              </tr>
+            )}
+            {assocOverrides.map((o, i) => (
+              <tr key={i} style={styles.tdRow}>
+                <td style={styles.td}>
+                  <code style={styles.code}>{o.nativePair}</code>
+                </td>
+                <td style={styles.td}>
+                  {o.semanticName === null ? <span style={{ opacity: 0.5 }}>—</span> : <code style={styles.code}>{o.semanticName}</code>}
+                </td>
+                <td style={styles.td}>{new Date(o.updatedAt).toLocaleString()}</td>
+                <td style={styles.td}>
+                  <button
+                    style={styles.btnDanger}
+                    disabled={busy || selectedConnectorId === null}
+                    onClick={() => {
+                      if (
+                        selectedConnectorId !== null &&
+                        window.confirm(`Remove association override ${o.nativePair}?`)
+                      ) {
+                        void onAssocDelete(selectedConnectorId, o.nativePair);
+                      }
+                    }}
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
       <div style={styles.formCard}>
         <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>Field mapping override</div>
