@@ -11,6 +11,7 @@ import {
   SyncDto,
   SyncModeEnum,
 } from '../dto/connector.dto';
+import { QueueService } from './queue.service';
 
 /**
  * Phase 18 — SyncService.
@@ -27,6 +28,8 @@ import {
 export class SyncService {
   private readonly logger = new Logger(SyncService.name);
   private pool: Pool | null = null;
+
+  constructor(private readonly queueService: QueueService) {}
 
   private getPool(): Pool {
     if (this.pool === null) {
@@ -227,7 +230,8 @@ export class SyncService {
   }
 
   async triggerSync(connectorId: string, mode: SyncModeEnum, dryRun: boolean): Promise<SyncDto> {
-    const { rows } = await this.getPool().query(
+    const pool = this.getPool();
+    const insertRes = await pool.query(
       `INSERT INTO migration_staging.runs
          (id, workspace_id, mode, status, started_at, meta)
        VALUES (
@@ -235,12 +239,43 @@ export class SyncService {
          (SELECT workspace_id FROM migration_staging.connectors WHERE id = $1::uuid),
          $2, 'pending', NOW(),
          jsonb_build_object('connector_id', $1::text, 'dry_run', $3::boolean,
-                            'triggered_via', 'graphql', 'triggered_at', NOW())
+                            'triggered_via', 'rest', 'triggered_at', NOW())
        )
-       RETURNING id::text AS id, started_at AS "startedAt", NULL::timestamptz AS "completedAt", status`,
+       RETURNING id::text AS id, started_at AS "startedAt",
+                 (SELECT workspace_id::text FROM migration_staging.connectors WHERE id = $1::uuid) AS "workspaceId",
+                 status`,
       [connectorId, mode.toString().toLowerCase(), dryRun],
     );
-    return { ...rows[0], connectorId, rowsStaged: 0, edgesStaged: 0 };
+    const row = insertRes.rows[0] as { id: string; startedAt: string; workspaceId: string; status: string };
+
+    try {
+      const publish = await this.queueService.publishRun({
+        runId: row.id,
+        connectorId,
+        workspaceId: row.workspaceId,
+        mode: mode.toString().toLowerCase(),
+        dryRun,
+      });
+      if (publish.skipped) {
+        this.logger.log(`run ${row.id} inserted; queue disabled, stays pending`);
+      } else {
+        this.logger.log(`run ${row.id} queued (sqs message ${publish.messageId})`);
+      }
+    } catch (e) {
+      const msg = (e as Error).message;
+      this.logger.error(`run ${row.id} SQS publish failed: ${msg}`);
+      await pool.query(
+        `UPDATE migration_staging.runs
+           SET status = 'failed',
+               completed_at = NOW(),
+               meta = COALESCE(meta, '{}'::jsonb) ||
+                      jsonb_build_object('error_message', $2::text, 'phase19_publish_failed', true)
+         WHERE id = $1::uuid`,
+        [row.id, msg],
+      );
+      return { id: row.id, startedAt: row.startedAt, completedAt: new Date().toISOString(), status: 'failed', connectorId, rowsStaged: 0, edgesStaged: 0 };
+    }
+    return { id: row.id, startedAt: row.startedAt, completedAt: null, status: row.status, connectorId, rowsStaged: 0, edgesStaged: 0 };
   }
 
   async scheduleSync(connectorId: string, cron: string | null): Promise<boolean> {
