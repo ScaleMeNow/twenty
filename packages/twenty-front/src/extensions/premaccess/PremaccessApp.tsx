@@ -85,40 +85,40 @@ const styles = {
   page: {
     padding: '24px 28px',
     fontFamily: 'Inter, system-ui, sans-serif',
-    color: 'var(--font-color-primary, #f3f3f3)',
+    color: 'var(--t-font-color-primary, #f3f3f3)',
     minHeight: '100%',
     maxWidth: 1280,
   } as const,
   h1: { fontSize: 22, fontWeight: 600, marginBottom: 4 } as const,
-  subtitle: { color: 'var(--font-color-tertiary, #888)', marginTop: 0, fontSize: 13, marginBottom: 16 } as const,
+  subtitle: { color: 'var(--t-font-color-tertiary, #888)', marginTop: 0, fontSize: 13, marginBottom: 16 } as const,
   helpBanner: {
-    background: 'var(--background-tertiary, #1f2937)',
-    border: '1px solid var(--border-color-light, #2a3441)',
+    background: 'var(--t-background-tertiary, #1f2937)',
+    border: '1px solid var(--t-border-color-light, #2a3441)',
     borderLeft: '3px solid #60a5fa',
     borderRadius: 6,
     padding: '12px 14px',
     fontSize: 13,
-    color: 'var(--font-color-secondary, #cbd5e1)',
+    color: 'var(--t-font-color-secondary, #cbd5e1)',
     marginBottom: 18,
     lineHeight: 1.5,
   } as const,
   section: { marginTop: 28 } as const,
   sectionHeader: { display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 } as const,
   sectionTitle: { fontSize: 15, fontWeight: 600 } as const,
-  sectionHelp: { fontSize: 12, color: 'var(--font-color-tertiary, #888)' } as const,
+  sectionHelp: { fontSize: 12, color: 'var(--t-font-color-tertiary, #888)' } as const,
   table: {
     width: '100%',
     borderCollapse: 'collapse' as const,
     fontSize: 13,
-    background: 'var(--background-primary, #1a1a1a)',
-    border: '1px solid var(--border-color-medium, #2a2a2a)',
+    background: 'var(--t-background-primary, #1a1a1a)',
+    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
     borderRadius: 6,
     overflow: 'hidden' as const,
   },
   thRow: {
-    background: 'var(--background-secondary, #222)',
+    background: 'var(--t-background-secondary, #222)',
     textAlign: 'left' as const,
-    color: 'var(--font-color-secondary, #aaa)',
+    color: 'var(--t-font-color-secondary, #aaa)',
   },
   th: {
     padding: '10px 12px',
@@ -128,15 +128,15 @@ const styles = {
     letterSpacing: '0.04em',
     cursor: 'help' as const,
   },
-  tdRow: { borderTop: '1px solid var(--border-color-light, #2a2a2a)' } as const,
+  tdRow: { borderTop: '1px solid var(--t-border-color-light, #2a2a2a)' } as const,
   td: { padding: '10px 12px' } as const,
   btn: {
     padding: '6px 12px',
     fontSize: 12,
     borderRadius: 4,
-    border: '1px solid var(--border-color-medium, #2a2a2a)',
-    background: 'var(--background-tertiary, #2b2b2b)',
-    color: 'var(--font-color-primary, #f3f3f3)',
+    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
+    background: 'var(--t-background-tertiary, #2b2b2b)',
+    color: 'var(--t-font-color-primary, #f3f3f3)',
     cursor: 'pointer' as const,
   },
   btnPrimary: {
@@ -159,11 +159,11 @@ const styles = {
     cursor: 'pointer' as const,
   },
   card: {
-    border: '1px solid var(--border-color-medium, #2a2a2a)',
+    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
     borderRadius: 6,
     padding: 14,
     marginBottom: 10,
-    background: 'var(--background-primary, #1a1a1a)',
+    background: 'var(--t-background-primary, #1a1a1a)',
   },
   errorBanner: {
     background: 'rgba(220, 38, 38, 0.12)',
@@ -195,26 +195,26 @@ const styles = {
     width: '100%',
     padding: '8px 10px',
     fontSize: 13,
-    background: 'var(--background-secondary, #222)',
-    color: 'var(--font-color-primary, #f3f3f3)',
-    border: '1px solid var(--border-color-medium, #2a2a2a)',
+    background: 'var(--t-background-secondary, #222)',
+    color: 'var(--t-font-color-primary, #f3f3f3)',
+    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
     borderRadius: 4,
     fontFamily: 'inherit',
   } as const,
-  label: { fontSize: 12, color: 'var(--font-color-secondary, #aaa)', marginBottom: 4, display: 'block' } as const,
+  label: { fontSize: 12, color: 'var(--t-font-color-secondary, #aaa)', marginBottom: 4, display: 'block' } as const,
   formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 } as const,
   formCard: {
-    background: 'var(--background-secondary, #1c1c1c)',
-    border: '1px solid var(--border-color-light, #2a2a2a)',
+    background: 'var(--t-background-secondary, #1c1c1c)',
+    border: '1px solid var(--t-border-color-light, #2a2a2a)',
     borderRadius: 6,
     padding: 16,
     marginBottom: 16,
   } as const,
-  tabs: { display: 'flex', gap: 4, borderBottom: '1px solid var(--border-color-medium, #2a2a2a)', marginBottom: 16 } as const,
-  tab: { padding: '8px 16px', fontSize: 13, color: 'var(--font-color-tertiary, #888)', cursor: 'pointer' as const, borderBottom: '2px solid transparent' },
-  tabActive: { color: 'var(--font-color-primary, #f3f3f3)', borderBottom: '2px solid #2563eb' } as const,
+  tabs: { display: 'flex', gap: 4, borderBottom: '1px solid var(--t-border-color-medium, #2a2a2a)', marginBottom: 16 } as const,
+  tab: { padding: '8px 16px', fontSize: 13, color: 'var(--t-font-color-tertiary, #888)', cursor: 'pointer' as const, borderBottom: '2px solid transparent' },
+  tabActive: { color: 'var(--t-font-color-primary, #f3f3f3)', borderBottom: '2px solid #2563eb' } as const,
   code: {
-    background: 'var(--background-secondary, #0f1419)',
+    background: 'var(--t-background-secondary, #0f1419)',
     padding: '2px 5px',
     borderRadius: 3,
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
@@ -222,7 +222,7 @@ const styles = {
     color: '#fde047',
   } as const,
   codeBlock: {
-    background: 'var(--background-secondary, #0f1419)',
+    background: 'var(--t-background-secondary, #0f1419)',
     padding: 12,
     borderRadius: 4,
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
@@ -231,7 +231,7 @@ const styles = {
     overflow: 'auto' as const,
     whiteSpace: 'pre-wrap' as const,
     marginTop: 8,
-    border: '1px solid var(--border-color-light, #2a2a2a)',
+    border: '1px solid var(--t-border-color-light, #2a2a2a)',
   },
 };
 
@@ -320,7 +320,7 @@ export const PremaccessApp = () => {
         Bedrock — links between tasks/notes and people/companies that the source CRM didn't have
         explicitly. You approve or reject those before they touch the workspace.
         <br />
-        <span style={{ color: 'var(--font-color-tertiary, #888)' }}>
+        <span style={{ color: 'var(--t-font-color-tertiary, #888)' }}>
           Need the canonical reference? See <code style={styles.code}>docs/MIGRATION-RUNBOOK.md</code>
           {' '}and{' '}
           <code style={styles.code}>migration/MIGRATION_WORKFLOW.md</code> in the meta-dojo repo.
@@ -965,7 +965,7 @@ const InferredTab = ({
         person's name. Each edge carries an evidence string and a confidence score. Promote the ones
         you trust; bulk-reject the rest under a threshold.
         <br />
-        <span style={{ color: 'var(--font-color-tertiary, #888)' }}>
+        <span style={{ color: 'var(--t-font-color-tertiary, #888)' }}>
           Threshold ≥ 0.9 is usually safe to auto-promote in batch. Below 0.7 is noisy — start there
           and walk up.
         </span>
@@ -1024,7 +1024,7 @@ const InferredTab = ({
             <div
               key={i}
               style={{
-                borderTop: i === 0 ? 'none' : '1px solid var(--border-color-light, #2a2a2a)',
+                borderTop: i === 0 ? 'none' : '1px solid var(--t-border-color-light, #2a2a2a)',
                 paddingTop: i === 0 ? 0 : 10,
                 paddingBottom: 10,
               }}
@@ -1033,11 +1033,11 @@ const InferredTab = ({
                 {e.semanticType} · {e.fromObject} → {e.toObject}{' '}
                 <span style={pillFor('completed')}>{e.confidence.toFixed(2)}</span>
               </div>
-              <div style={{ color: 'var(--font-color-secondary, #aaa)', fontSize: 13 }}>
+              <div style={{ color: 'var(--t-font-color-secondary, #aaa)', fontSize: 13 }}>
                 {e.evidence}
               </div>
               {e.parentTitle !== null && (
-                <div style={{ color: 'var(--font-color-tertiary, #888)', fontSize: 12, marginTop: 4 }}>
+                <div style={{ color: 'var(--t-font-color-tertiary, #888)', fontSize: 12, marginTop: 4 }}>
                   &ldquo;{e.parentTitle}&rdquo;
                 </div>
               )}
@@ -1055,7 +1055,7 @@ const InferredTab = ({
       ))}
 
       {edges.length === 0 && (
-        <div style={{ color: 'var(--font-color-tertiary, #888)', fontSize: 13 }}>
+        <div style={{ color: 'var(--t-font-color-tertiary, #888)', fontSize: 13 }}>
           No pending inferred edges at confidence ≥ {minConfidence.toFixed(2)}.
         </div>
       )}
@@ -1069,7 +1069,7 @@ const DocsTab = () => (
 
     <details open style={{ marginBottom: 10 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>What lives where?</summary>
-      <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--font-color-secondary, #aaa)' }}>
+      <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
         <li>
           <code style={styles.code}>migration/</code> — Python ETL package. <code style={styles.code}>python -m migration …</code> from the meta-dojo
           repo root.
@@ -1089,7 +1089,7 @@ const DocsTab = () => (
 
     <details style={{ marginBottom: 10 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>End-to-end happy path</summary>
-      <ol style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--font-color-secondary, #aaa)' }}>
+      <ol style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
         <li>Create a connector (Tab 1 → "Connect a new source CRM").</li>
         <li>Optionally override field/association mappings (Tab 2). Skip if defaults are fine.</li>
         <li>Trigger a <strong>dry-run sync</strong> first — never a live one until you've seen the row count.</li>
@@ -1126,7 +1126,7 @@ curl -H "Authorization: Bearer $TOKEN" \\
 
     <details style={{ marginBottom: 10 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Troubleshooting</summary>
-      <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--font-color-secondary, #aaa)' }}>
+      <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
         <li>
           <strong>401 Unauthorized</strong> — your Twenty session expired. Log out and back in.
         </li>
