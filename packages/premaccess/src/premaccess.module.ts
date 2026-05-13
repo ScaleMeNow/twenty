@@ -22,13 +22,13 @@ import { Module } from '@nestjs/common';
 import { PremaccessController } from './controllers/premaccess.controller';
 import { SyncResolver } from './resolvers/sync.resolver';
 import { EnsureSchemaService } from './services/ensure-schema.service';
-import { RunnerClientService } from './services/runner-client.service';
+import { QueueService } from './services/queue.service';
 import { SyncService } from './services/sync.service';
 
 @Module({
   imports: [],
   controllers: [PremaccessController],
-  providers: [SyncResolver, SyncService, EnsureSchemaService, RunnerClientService],
+  providers: [SyncResolver, SyncService, EnsureSchemaService, QueueService],
   exports: [SyncService],
 })
 export class PremaccessModule {}
