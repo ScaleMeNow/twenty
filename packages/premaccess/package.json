@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "peerDependencies": {
-    "@aws-sdk/client-codebuild": "*",
+    "@aws-sdk/client-sqs": "*",
     "@nestjs/common": "*",
     "@nestjs/graphql": "*",
     "jsonwebtoken": "*",
