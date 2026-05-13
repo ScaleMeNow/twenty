@@ -5,6 +5,7 @@ import { styled } from '@linaria/react';
 import { lazy, Suspense } from 'react';
 
 import { themeCssVariables } from 'twenty-ui/theme-constants';
+import { PremaccessNavigationSection } from '~/extensions/premaccess/PremaccessNavigationSection';
 
 const FavoritesSectionDispatcher = lazy(() =>
   import('@/navigation-menu-item/display/sections/favorites/components/FavoritesSectionDispatcher').then(
@@ -35,6 +36,7 @@ export const MainNavigationDrawerScrollableItems = () => {
       <Suspense fallback={<NavigationDrawerWorkspaceSectionSkeletonLoader />}>
         <FavoritesSectionDispatcher />
         <WorkspaceSectionDispatcher />
+        <PremaccessNavigationSection />
       </Suspense>
     </StyledScrollableItemsContainer>
   );
