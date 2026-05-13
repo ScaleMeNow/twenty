@@ -1,21 +1,28 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 
 import { SyncService } from '../services/sync.service';
 import { SyncModeEnum } from '../dto/connector.dto';
+import { PremaccessAuthGuard } from '../guards/premaccess-auth.guard';
 
 /**
  * Phase 18 REST surface — mirrors SyncResolver but accessible via standard
  * NestJS controller routes (Twenty's GraphQL uses code-first explicit resolver
  * registration we don't have access to without touching upstream files).
  *
- * Mounted at /_premaccess/* by Twenty's global Nest routing. Auth inherits
- * Twenty's existing middleware stack.
+ * Mounted at /_premaccess/* by Twenty's global Nest routing. Every route
+ * except /_premaccess/health requires a valid Twenty access token —
+ * PremaccessAuthGuard verifies HS256(APP_SECRET) against the Authorization
+ * header or the tokenPair cookie. Anonymous probes get 401.
  */
 @Controller('_premaccess')
+@UseGuards(PremaccessAuthGuard)
 export class PremaccessController {
   constructor(private readonly sync: SyncService) {}
 
+  // /health stays anon — lets ALB target group + uptime probes reach it
+  // without a Twenty session. No sensitive payload returned.
   @Get('health')
+  @UseGuards()
   async health() {
     return { ok: true, module: 'premaccess', ts: new Date().toISOString() };
   }
