@@ -1,8 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
+import type { JwtPayload } from 'jsonwebtoken';
 
 import { SyncService } from '../services/sync.service';
 import { SyncModeEnum } from '../dto/connector.dto';
 import { PremaccessAuthGuard } from '../guards/premaccess-auth.guard';
+
+type AuthedRequest = Request & { premaccessAuth?: JwtPayload & { userId?: string } };
 
 /**
  * Phase 18 REST surface — mirrors SyncResolver but accessible via standard
@@ -63,8 +67,18 @@ export class PremaccessController {
   }
 
   @Post('connectors/:id/sync')
-  async trigger(@Param('id') id: string, @Body() body: { mode?: 'FULL' | 'DELTA'; dryRun?: boolean }) {
-    return this.sync.triggerSync(id, (body.mode as SyncModeEnum) ?? SyncModeEnum.DELTA, body.dryRun ?? false);
+  async trigger(
+    @Param('id') id: string,
+    @Body() body: { mode?: 'FULL' | 'DELTA'; dryRun?: boolean },
+    @Req() req: AuthedRequest,
+  ) {
+    const userId = req.premaccessAuth?.userId ?? null;
+    return this.sync.triggerSync(
+      id,
+      (body.mode as SyncModeEnum) ?? SyncModeEnum.DELTA,
+      body.dryRun ?? false,
+      { userId },
+    );
   }
 
   @Post('inferred-edges/promote')
