@@ -4492,6 +4492,11 @@ msgstr "credits/period"
 msgid "Crimson"
 msgstr "Crimson"
 
+#. js-lingui-id: JjZrU9
+#: src/modules/navigation/components/NavigationDrawerOtherSection.tsx
+msgid "CRM Sync"
+msgstr "CRM Sync"
+
 #. js-lingui-id: 6Oaeoc
 #: src/modules/settings/logic-functions/components/triggers/SettingsLogicFunctionCronTriggerSection.tsx
 #: src/modules/settings/logic-functions/components/tabs/SettingsLogicFunctionTestTab.tsx
