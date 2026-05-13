@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import type { JwtPayload } from 'jsonwebtoken';
 
@@ -56,6 +56,29 @@ export class PremaccessController {
     return this.sync.connect(body);
   }
 
+  @Patch('connectors/:id')
+  async update(
+    @Param('id') id: string,
+    @Body() body: { displayName?: string; status?: string; credentialsSecretArn?: string | null },
+  ) {
+    return this.sync.updateConnector(id, body);
+  }
+
+  @Delete('connectors/:id')
+  async remove(@Param('id') id: string) {
+    return this.sync.deleteConnector(id);
+  }
+
+  @Get('connectors/:id/field-mappings')
+  async listField(@Param('id') id: string) {
+    return this.sync.listFieldOverrides(id);
+  }
+
+  @Get('connectors/:id/association-mappings')
+  async listAssoc(@Param('id') id: string) {
+    return this.sync.listAssocOverrides(id);
+  }
+
   @Post('connectors/:id/field-mapping')
   async setField(@Param('id') id: string, @Body() body: { twentyObject: string; sourceProperty: string; action: string; twentyField?: string }) {
     return this.sync.setFieldMapping({ connectorId: id, ...body });
@@ -64,6 +87,20 @@ export class PremaccessController {
   @Post('connectors/:id/association-mapping')
   async setAssoc(@Param('id') id: string, @Body() body: { nativePair: string; semanticName?: string }) {
     return this.sync.setAssociationMapping({ connectorId: id, ...body });
+  }
+
+  @Delete('connectors/:id/field-mapping')
+  async dropField(
+    @Param('id') id: string,
+    @Query('twentyObject') twentyObject: string,
+    @Query('sourceProperty') sourceProperty: string,
+  ) {
+    return this.sync.deleteFieldOverride(id, twentyObject, sourceProperty);
+  }
+
+  @Delete('connectors/:id/association-mapping')
+  async dropAssoc(@Param('id') id: string, @Query('nativePair') nativePair: string) {
+    return this.sync.deleteAssocOverride(id, nativePair);
   }
 
   @Post('connectors/:id/sync')
