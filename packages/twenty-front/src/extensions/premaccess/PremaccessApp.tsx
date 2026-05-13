@@ -268,17 +268,23 @@ const InfoIcon = ({ tip }: { tip: string }) => (
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      marginLeft: 4,
+      width: 14,
+      height: 14,
+      marginLeft: 6,
       verticalAlign: 'middle',
       cursor: 'help',
-      opacity: 0.55,
+      borderRadius: '50%',
+      border: '1px solid currentColor',
+      fontSize: 9,
+      fontWeight: 700,
+      lineHeight: 1,
+      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontStyle: 'italic',
+      opacity: 0.5,
+      userSelect: 'none',
     }}
   >
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
-      <circle cx="8" cy="5" r="0.9" fill="currentColor" />
-      <rect x="7.3" y="7" width="1.4" height="5" rx="0.6" fill="currentColor" />
-    </svg>
+    i
   </span>
 );
 
