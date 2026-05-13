@@ -273,9 +273,9 @@ export class SyncService {
          WHERE id = $1::uuid`,
         [row.id, msg],
       );
-      return { id: row.id, startedAt: row.startedAt, completedAt: new Date().toISOString(), status: 'failed', connectorId, rowsStaged: 0, edgesStaged: 0 };
+      return { id: row.id, startedAt: new Date(row.startedAt), completedAt: new Date(), status: 'failed', connectorId, rowsStaged: 0, edgesStaged: 0 };
     }
-    return { id: row.id, startedAt: row.startedAt, completedAt: null, status: row.status, connectorId, rowsStaged: 0, edgesStaged: 0 };
+    return { id: row.id, startedAt: new Date(row.startedAt), completedAt: null, status: row.status, connectorId, rowsStaged: 0, edgesStaged: 0 };
   }
 
   async scheduleSync(connectorId: string, cron: string | null): Promise<boolean> {
