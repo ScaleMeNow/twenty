@@ -1,6 +1,7 @@
 import { useLingui } from '@lingui/react/macro';
+import { useNavigate } from 'react-router-dom';
 import { SettingsPath } from 'twenty-shared/types';
-import { IconHelpCircle, IconSettings } from 'twenty-ui/display';
+import { IconHelpCircle, IconRefresh, IconSettings } from 'twenty-ui/display';
 import { AnimatedExpandableContainer } from 'twenty-ui/layout';
 
 import { currentWorkspaceMemberState } from '@/auth/states/currentWorkspaceMemberState';
@@ -18,6 +19,7 @@ import { useNavigateSettings } from '~/hooks/useNavigateSettings';
 
 export const NavigationDrawerOtherSection = () => {
   const { t } = useLingui();
+  const navigate = useNavigate();
   const navigateSettings = useNavigateSettings();
   const currentWorkspaceMember = useAtomStateValue(currentWorkspaceMemberState);
 
@@ -47,6 +49,11 @@ export const NavigationDrawerOtherSection = () => {
         containAnimation
         initial={false}
       >
+        <NavigationDrawerItem
+          label={t`CRM Sync`}
+          Icon={IconRefresh}
+          onClick={() => navigate('/premaccess/')}
+        />
         <NavigationDrawerItem
           label={t`Settings`}
           Icon={IconSettings}
