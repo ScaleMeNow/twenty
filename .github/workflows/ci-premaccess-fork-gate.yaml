@@ -55,6 +55,7 @@ jobs:
             ["packages/twenty-front/src/App.tsx"]=1
             ["packages/twenty-front/src/index.tsx"]=1
             ["packages/twenty-front/src/modules/app/hooks/useCreateAppRouter.tsx"]=2
+            ["packages/twenty-front/src/modules/navigation/components/NavigationDrawerOtherSection.tsx"]=8
             ["package.json"]=2
             ["packages/twenty-docker/twenty/Dockerfile"]=10
             ["yarn.lock"]=50
