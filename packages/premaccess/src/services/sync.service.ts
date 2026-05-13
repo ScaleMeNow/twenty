@@ -152,6 +152,9 @@ export class SyncService {
              (r.meta->>'dry_run')::boolean AS "dryRun",
              (r.meta->>'triggered_by_email') AS "triggeredByEmail",
              (r.meta->>'triggered_by_name')  AS "triggeredByName",
+             (r.meta->>'build_id')           AS "buildId",
+             (r.meta->>'error_message')      AS "errorMessage",
+             NULLIF(r.meta->>'last_marker_at','')::timestamptz AS "lastMarkerAt",
              COALESCE((SELECT COUNT(*) FROM migration_staging.normalized_rows nr
                        WHERE nr.run_id = r.id), 0)::int AS "rowsStaged",
              COALESCE((SELECT COUNT(*) FROM migration_staging.association_edges ae

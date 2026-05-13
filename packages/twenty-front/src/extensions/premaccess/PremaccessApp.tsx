@@ -39,6 +39,9 @@ type Sync = {
   triggeredByName: string | null;
   mode: string | null;
   dryRun: boolean | null;
+  buildId: string | null;
+  errorMessage: string | null;
+  lastMarkerAt: string | null;
 };
 
 type InferredEdge = {
@@ -259,6 +262,81 @@ const pillFor = (status: string) => {
 };
 
 type TabKey = 'overview' | 'mappings' | 'bulk' | 'inferred' | 'docs';
+
+const STAGES: Array<{ key: string; label: string }> = [
+  { key: 'pending',     label: 'Queued (SQS)' },
+  { key: 'in_progress', label: 'Marked in-progress (Lambda)' },
+  { key: 'build',       label: 'CodeBuild migration' },
+  { key: 'done',        label: 'Marker complete (Lambda)' },
+];
+
+const PipelineStages = ({ s }: { s: Sync }) => {
+  // Derive stage states from the row's status + presence of buildId.
+  const status = s.status;
+  const hasBuild = s.buildId !== null;
+  const stateFor = (key: string): 'pending' | 'running' | 'done' | 'failed' => {
+    if (status === 'failed') {
+      if (key === 'pending') return 'done';
+      if (key === 'in_progress') return s.lastMarkerAt !== null ? 'done' : 'failed';
+      if (key === 'build') return hasBuild ? 'failed' : 'pending';
+      if (key === 'done') return 'failed';
+    }
+    if (status === 'completed') return 'done';
+    if (status === 'in_progress') {
+      if (key === 'pending') return 'done';
+      if (key === 'in_progress') return 'done';
+      if (key === 'build') return hasBuild ? 'running' : 'running';
+      if (key === 'done') return 'pending';
+    }
+    if (status === 'pending') {
+      if (key === 'pending') return 'running';
+      return 'pending';
+    }
+    return 'pending';
+  };
+  const dot = (st: ReturnType<typeof stateFor>) => {
+    const palette = {
+      pending: 'rgba(148,163,184,0.45)',
+      running: '#fbbf24',
+      done: '#22c55e',
+      failed: '#ef4444',
+    } as const;
+    return (
+      <span
+        style={{
+          display: 'inline-block',
+          width: 10,
+          height: 10,
+          borderRadius: 999,
+          background: palette[st],
+          marginRight: 8,
+          verticalAlign: 'middle',
+        }}
+      />
+    );
+  };
+  return (
+    <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      {STAGES.map((stg) => {
+        const st = stateFor(stg.key);
+        return (
+          <li key={stg.key} style={{ padding: '3px 0', fontSize: 13 }}>
+            {dot(st)}
+            <span style={{ color: st === 'pending' ? 'var(--t-font-color-tertiary)' : 'inherit' }}>
+              {stg.label}
+            </span>
+            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--t-font-color-tertiary)' }}>
+              {st === 'pending' && 'not yet'}
+              {st === 'running' && 'running…'}
+              {st === 'done' && 'done'}
+              {st === 'failed' && 'failed'}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+};
 
 const InfoIcon = ({ tip }: { tip: string }) => (
   <span
@@ -538,6 +616,7 @@ const OverviewTab = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editStatus, setEditStatus] = useState('active');
+  const [expandedSyncId, setExpandedSyncId] = useState<string | null>(null);
 
   return (
     <>
@@ -779,19 +858,87 @@ const OverviewTab = ({
                 s.mode === null
                   ? '—'
                   : `${s.mode}${s.dryRun === true ? ' · dry-run' : s.dryRun === false ? ' · live' : ''}`;
+              const isOpen = expandedSyncId === s.id;
+              const buildConsoleUrl =
+                s.buildId === null
+                  ? null
+                  : `https://eu-west-1.console.aws.amazon.com/codesuite/codebuild/152160818779/projects/gbl-dev-premaccess-migration/build/${encodeURIComponent(s.buildId)}/?region=eu-west-1`;
               return (
-                <tr key={s.id} style={styles.tdRow} title={`Run ID: ${s.id}`}>
-                  <td style={styles.td}>{new Date(s.startedAt).toLocaleString()}</td>
-                  <td style={styles.td} title={s.triggeredByEmail ?? ''}>
-                    {triggeredBy}
-                  </td>
-                  <td style={styles.td}>{modeLabel}</td>
-                  <td style={styles.td}>
-                    <span style={pillFor(s.status)}>{s.status}</span>
-                  </td>
-                  <td style={styles.td}>{s.rowsStaged}</td>
-                  <td style={styles.td}>{s.edgesStaged}</td>
-                </tr>
+                <>
+                  <tr
+                    key={s.id}
+                    style={{ ...styles.tdRow, cursor: 'pointer' }}
+                    onClick={() => setExpandedSyncId(isOpen ? null : s.id)}
+                    title={`Click to ${isOpen ? 'collapse' : 'inspect'} run ${s.id}`}
+                  >
+                    <td style={styles.td}>
+                      <span style={{ opacity: 0.5, marginRight: 6 }}>{isOpen ? '▾' : '▸'}</span>
+                      {new Date(s.startedAt).toLocaleString()}
+                    </td>
+                    <td style={styles.td} title={s.triggeredByEmail ?? ''}>
+                      {triggeredBy}
+                    </td>
+                    <td style={styles.td}>{modeLabel}</td>
+                    <td style={styles.td}>
+                      <span style={pillFor(s.status)}>{s.status}</span>
+                    </td>
+                    <td style={styles.td}>{s.rowsStaged}</td>
+                    <td style={styles.td}>{s.edgesStaged}</td>
+                  </tr>
+                  {isOpen && (
+                    <tr key={`${s.id}-detail`} style={styles.tdRow}>
+                      <td style={{ ...styles.td, padding: 18 }} colSpan={6}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '6px 12px', fontSize: 13 }}>
+                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Run ID</div>
+                          <div>
+                            <code style={styles.code}>{s.id}</code>
+                          </div>
+                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Started</div>
+                          <div>{new Date(s.startedAt).toLocaleString()}</div>
+                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Completed</div>
+                          <div>{s.completedAt === null ? '—' : new Date(s.completedAt).toLocaleString()}</div>
+                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Last orchestrator event</div>
+                          <div>{s.lastMarkerAt === null ? '—' : new Date(s.lastMarkerAt).toLocaleString()}</div>
+                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>CodeBuild build ID</div>
+                          <div>
+                            {s.buildId === null ? (
+                              <span style={{ opacity: 0.5 }}>
+                                not started — the orchestrator has not reached the build step yet
+                              </span>
+                            ) : (
+                              <>
+                                <code style={styles.code}>{s.buildId}</code>
+                                {buildConsoleUrl !== null && (
+                                  <>
+                                    {' '}
+                                    <a
+                                      href={buildConsoleUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      style={{ color: '#60a5fa' }}
+                                    >
+                                      open in AWS console ↗
+                                    </a>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Pipeline stages</div>
+                          <div>
+                            <PipelineStages s={s} />
+                          </div>
+                          {s.errorMessage !== null && (
+                            <>
+                              <div style={{ color: 'var(--t-font-color-tertiary)' }}>Error</div>
+                              <pre style={{ ...styles.codeBlock, marginTop: 0, maxHeight: 220 }}>{s.errorMessage}</pre>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
               );
             })}
           </tbody>
