@@ -9,6 +9,7 @@
   "peerDependencies": {
     "@nestjs/common": "*",
     "@nestjs/graphql": "*",
+    "jsonwebtoken": "*",
     "pg": "*",
     "reflect-metadata": "*"
   }
