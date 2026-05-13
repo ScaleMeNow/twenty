@@ -35,6 +35,10 @@ type Sync = {
   status: string;
   rowsStaged: number;
   edgesStaged: number;
+  triggeredByEmail: string | null;
+  triggeredByName: string | null;
+  mode: string | null;
+  dryRun: boolean | null;
 };
 
 type InferredEdge = {
@@ -626,38 +630,51 @@ const OverviewTab = ({
         <table style={styles.table}>
           <thead>
             <tr style={styles.thRow}>
-              <Th tip="UTC timestamp when the run was inserted. Click any row to copy the run ID.">
-                Started
+              <Th tip="When the run was triggered (local time).">Started</Th>
+              <Th tip="User who triggered this run.">Triggered by</Th>
+              <Th tip="full = re-extracts everything; delta = only changes since last sync. dry-run = stages but does not commit.">
+                Mode
               </Th>
-              <Th tip="pending = queued. completed = succeeded. failed = check the run record's error column in migration_staging.runs.">
+              <Th tip="pending = queued. in_progress = the orchestrator is working on it. completed = succeeded. failed = inspect the run record's error_message.">
                 Status
               </Th>
-              <Th tip="Number of rows normalised into migration_staging.normalized_rows. Excludes rows skipped by IF NOT EXISTS dedup.">
-                Rows staged
+              <Th tip="Rows normalised and staged for load. Excludes rows skipped by dedup.">
+                Rows
               </Th>
-              <Th tip="Number of association edges (semantic types like task_about_person) staged in migration_staging.association_edges, including AI-inferred ones.">
-                Edges staged
+              <Th tip="Association edges staged, including AI-inferred ones pending review in Tab 4.">
+                Edges
               </Th>
             </tr>
           </thead>
           <tbody>
             {syncs.length === 0 && (
               <tr style={styles.tdRow}>
-                <td style={styles.td} colSpan={4}>
+                <td style={styles.td} colSpan={6}>
                   No runs yet. Trigger a sync from the table above.
                 </td>
               </tr>
             )}
-            {syncs.map((s) => (
-              <tr key={s.id} style={styles.tdRow} title={`Run ID: ${s.id}`}>
-                <td style={styles.td}>{new Date(s.startedAt).toLocaleString()}</td>
-                <td style={styles.td}>
-                  <span style={pillFor(s.status)}>{s.status}</span>
-                </td>
-                <td style={styles.td}>{s.rowsStaged}</td>
-                <td style={styles.td}>{s.edgesStaged}</td>
-              </tr>
-            ))}
+            {syncs.map((s) => {
+              const triggeredBy = s.triggeredByName ?? s.triggeredByEmail ?? '—';
+              const modeLabel =
+                s.mode === null
+                  ? '—'
+                  : `${s.mode}${s.dryRun === true ? ' · dry-run' : s.dryRun === false ? ' · live' : ''}`;
+              return (
+                <tr key={s.id} style={styles.tdRow} title={`Run ID: ${s.id}`}>
+                  <td style={styles.td}>{new Date(s.startedAt).toLocaleString()}</td>
+                  <td style={styles.td} title={s.triggeredByEmail ?? ''}>
+                    {triggeredBy}
+                  </td>
+                  <td style={styles.td}>{modeLabel}</td>
+                  <td style={styles.td}>
+                    <span style={pillFor(s.status)}>{s.status}</span>
+                  </td>
+                  <td style={styles.td}>{s.rowsStaged}</td>
+                  <td style={styles.td}>{s.edgesStaged}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </section>
