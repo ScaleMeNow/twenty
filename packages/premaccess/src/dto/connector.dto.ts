@@ -39,6 +39,9 @@ export class SyncDto {
   @Field({ nullable: true }) triggeredByName?: string | null;
   @Field({ nullable: true }) mode?: string | null;
   @Field({ nullable: true }) dryRun?: boolean | null;
+  @Field({ nullable: true }) buildId?: string | null;
+  @Field({ nullable: true }) errorMessage?: string | null;
+  @Field({ nullable: true }) lastMarkerAt?: Date | null;
 }
 
 @ObjectType('InferredEdge')
