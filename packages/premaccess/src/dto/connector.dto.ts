@@ -35,6 +35,10 @@ export class SyncDto {
   @Field() status!: string;
   @Field(() => Number) rowsStaged!: number;
   @Field(() => Number) edgesStaged!: number;
+  @Field({ nullable: true }) triggeredByEmail?: string | null;
+  @Field({ nullable: true }) triggeredByName?: string | null;
+  @Field({ nullable: true }) mode?: string | null;
+  @Field({ nullable: true }) dryRun?: boolean | null;
 }
 
 @ObjectType('InferredEdge')
