@@ -194,6 +194,41 @@ export class SyncService {
     }
   }
 
+  async updateConnector(
+    id: string,
+    patch: { displayName?: string; status?: string; credentialsSecretArn?: string | null },
+  ): Promise<ConnectorDto | null> {
+    const sets: string[] = [];
+    const args: any[] = [id];
+    if (patch.displayName !== undefined) {
+      args.push(patch.displayName);
+      sets.push(`display_name = $${args.length}::text`);
+    }
+    if (patch.status !== undefined) {
+      args.push(patch.status);
+      sets.push(`status = $${args.length}::text`);
+    }
+    if (patch.credentialsSecretArn !== undefined) {
+      args.push(patch.credentialsSecretArn);
+      sets.push(`credentials_secret_arn = $${args.length}::text`);
+    }
+    if (sets.length === 0) return this.getConnector(id);
+    sets.push('updated_at = NOW()');
+    await this.getPool().query(
+      `UPDATE migration_staging.connectors SET ${sets.join(', ')} WHERE id = $1::uuid`,
+      args,
+    );
+    return this.getConnector(id);
+  }
+
+  async deleteConnector(id: string): Promise<{ deleted: boolean }> {
+    const { rowCount } = await this.getPool().query(
+      `DELETE FROM migration_staging.connectors WHERE id = $1::uuid`,
+      [id],
+    );
+    return { deleted: (rowCount ?? 0) > 0 };
+  }
+
   async connect(input: ConnectConnectorInput): Promise<ConnectorDto> {
     const { rows } = await this.getPool().query(
       `INSERT INTO migration_staging.connectors
@@ -205,6 +240,52 @@ export class SyncService {
       [input.source, input.displayName, input.workspaceId, input.credentialsSecretArn ?? null],
     );
     return rows[0];
+  }
+
+  async listFieldOverrides(connectorId: string): Promise<Array<{ twentyObject: string; sourceProperty: string; action: string; twentyField: string | null; updatedAt: string }>> {
+    const { rows } = await this.getPool().query(
+      `SELECT twenty_object AS "twentyObject",
+              source_property AS "sourceProperty",
+              action,
+              twenty_field AS "twentyField",
+              updated_at AS "updatedAt"
+       FROM migration_staging.connector_field_overrides
+       WHERE connector_id = $1::uuid
+       ORDER BY twenty_object, source_property`,
+      [connectorId],
+    );
+    return rows;
+  }
+
+  async listAssocOverrides(connectorId: string): Promise<Array<{ nativePair: string; semanticName: string | null; updatedAt: string }>> {
+    const { rows } = await this.getPool().query(
+      `SELECT native_pair AS "nativePair",
+              semantic_name AS "semanticName",
+              updated_at AS "updatedAt"
+       FROM migration_staging.connector_assoc_overrides
+       WHERE connector_id = $1::uuid
+       ORDER BY native_pair`,
+      [connectorId],
+    );
+    return rows;
+  }
+
+  async deleteFieldOverride(connectorId: string, twentyObject: string, sourceProperty: string): Promise<{ deleted: boolean }> {
+    const { rowCount } = await this.getPool().query(
+      `DELETE FROM migration_staging.connector_field_overrides
+       WHERE connector_id = $1::uuid AND twenty_object = $2::text AND source_property = $3::text`,
+      [connectorId, twentyObject, sourceProperty],
+    );
+    return { deleted: (rowCount ?? 0) > 0 };
+  }
+
+  async deleteAssocOverride(connectorId: string, nativePair: string): Promise<{ deleted: boolean }> {
+    const { rowCount } = await this.getPool().query(
+      `DELETE FROM migration_staging.connector_assoc_overrides
+       WHERE connector_id = $1::uuid AND native_pair = $2::text`,
+      [connectorId, nativePair],
+    );
+    return { deleted: (rowCount ?? 0) > 0 };
   }
 
   async setFieldMapping(input: SetFieldMappingInput): Promise<boolean> {
