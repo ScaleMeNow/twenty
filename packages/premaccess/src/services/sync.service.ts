@@ -148,6 +148,10 @@ export class SyncService {
              r.started_at AS "startedAt",
              r.completed_at AS "completedAt",
              r.status,
+             r.mode AS mode,
+             (r.meta->>'dry_run')::boolean AS "dryRun",
+             (r.meta->>'triggered_by_email') AS "triggeredByEmail",
+             (r.meta->>'triggered_by_name')  AS "triggeredByName",
              COALESCE((SELECT COUNT(*) FROM migration_staging.normalized_rows nr
                        WHERE nr.run_id = r.id), 0)::int AS "rowsStaged",
              COALESCE((SELECT COUNT(*) FROM migration_staging.association_edges ae
@@ -229,22 +233,35 @@ export class SyncService {
     return true;
   }
 
-  async triggerSync(connectorId: string, mode: SyncModeEnum, dryRun: boolean): Promise<SyncDto> {
+  async triggerSync(connectorId: string, mode: SyncModeEnum, dryRun: boolean, triggeredBy?: { userId?: string | null }): Promise<SyncDto> {
     const pool = this.getPool();
+    const userId = triggeredBy?.userId ?? null;
     const insertRes = await pool.query(
-      `INSERT INTO migration_staging.runs
+      `WITH u AS (
+         SELECT id::text AS id, email,
+                NULLIF(TRIM(CONCAT_WS(' ', "firstName", "lastName")), '') AS name
+         FROM core."user" WHERE id = $4::uuid
+       )
+       INSERT INTO migration_staging.runs
          (id, workspace_id, mode, status, started_at, meta)
        VALUES (
          gen_random_uuid(),
          (SELECT workspace_id FROM migration_staging.connectors WHERE id = $1::uuid),
          $2, 'pending', NOW(),
-         jsonb_build_object('connector_id', $1::text, 'dry_run', $3::boolean,
-                            'triggered_via', 'rest', 'triggered_at', NOW())
+         jsonb_strip_nulls(jsonb_build_object(
+           'connector_id', $1::text,
+           'dry_run', $3::boolean,
+           'triggered_via', 'rest',
+           'triggered_at', NOW(),
+           'triggered_by_user_id', $4::text,
+           'triggered_by_email', (SELECT email FROM u),
+           'triggered_by_name',  (SELECT name  FROM u)
+         ))
        )
        RETURNING id::text AS id, started_at AS "startedAt",
                  (SELECT workspace_id::text FROM migration_staging.connectors WHERE id = $1::uuid) AS "workspaceId",
                  status`,
-      [connectorId, mode.toString().toLowerCase(), dryRun],
+      [connectorId, mode.toString().toLowerCase(), dryRun, userId],
     );
     const row = insertRes.rows[0] as { id: string; startedAt: string; workspaceId: string; status: string };
 
