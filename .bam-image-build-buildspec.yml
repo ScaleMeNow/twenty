@@ -1,0 +1,36 @@
+version: "0.2"
+
+# CodeBuild spec for cicd[id=2] TWENTY-IMAGE-BUILD in dojo-config.yaml.
+# Source must be ScaleMeNow/twenty (the fork repo) — NOT meta-dojo. In
+# meta-dojo the twenty/ directory is .gitignored because the fork keeps
+# its own git history, so a meta-dojo clone has no twenty/ contents.
+#
+# Env vars (set by BAM via cicd[id=2].build[0].environment):
+#   AWS_REGION   eu-west-1
+#   ACCOUNT_ID   customer account id (152160818779 for gbl-dev)
+#   TARGET_REPO  dojo
+#
+# Behaviour: docker build the fork image from
+# packages/twenty-docker/twenty/Dockerfile (target twenty-aws),
+# tag :{DATE_TAG} + :stable, push both to ECR.
+#
+# ECS services do NOT auto-redeploy on a new :stable tag — operator must
+# trigger BAM RESTART after this build finishes.
+
+phases:
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+      - DATE_TAG=$(date -u +%Y%m%d-%H%M)
+      - echo "Building dojo:$DATE_TAG and dojo:stable"
+
+  build:
+    commands:
+      - docker build -t "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$TARGET_REPO:$DATE_TAG" --target twenty-aws -f packages/twenty-docker/twenty/Dockerfile .
+      - docker tag "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$TARGET_REPO:$DATE_TAG" "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$TARGET_REPO:stable"
+
+  post_build:
+    commands:
+      - docker push "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$TARGET_REPO:$DATE_TAG"
+      - docker push "$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$TARGET_REPO:stable"
+      - echo "Pushed $TARGET_REPO:$DATE_TAG and $TARGET_REPO:stable. Trigger BAM RESTART to land it on ECS."
