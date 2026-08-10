@@ -1329,12 +1329,12 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^1.1.7":
-  version: 1.1.14
-  resolution: "brace-expansion@npm:1.1.14"
+  version: 1.1.18
+  resolution: "brace-expansion@npm:1.1.18"
   dependencies:
     balanced-match: "npm:^1.0.0"
     concat-map: "npm:0.0.1"
-  checksum: 10c0/b6fdac832bc4e36a753658c9ed052c2e1a2be221763b002df25d1efbf7d21724334e726a6cd5eadc72a4b19ec3efb632d629cc003bc9c62f7af7a7915ffa4385
+  checksum: 10c0/3432c18a9e2ebf94162d4effb62198bd0adea06a9f332b2c0188df5d5e30b1e51ea3c848b6608e47d0b857ebe1ea5b3888ed3326dd3c4f6f9645c94153cf9c14
   languageName: node
   linkType: hard
 
@@ -3787,6 +3787,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"twenty-client-sdk@npm:2.1.0":
+  version: 2.1.0
+  resolution: "twenty-client-sdk@npm:2.1.0"
+  dependencies:
+    "@genql/cli": "npm:^3.0.3"
+    "@genql/runtime": "npm:^2.10.0"
+    esbuild: "npm:^0.25.0"
+    graphql: "npm:^16.8.1"
+  checksum: 10c0/cd4248fbb756f5ab8ed8fddf8db37e8776b870fa7d218f7d2cd8ff7f0c2a1764b2156e70c8395b0b7095384991d803570e7725efa32102014cfb1b32dc9f0577
+  languageName: node
+  linkType: hard
+
 "twenty-exa@workspace:.":
   version: 0.0.0-use.local
   resolution: "twenty-exa@workspace:."
@@ -3795,15 +3807,15 @@ __metadata:
     exa-js: "npm:^2.12.1"
     oxlint: "npm:^0.16.0"
     twenty-client-sdk: "npm:2.0.0"
-    twenty-sdk: "npm:2.0.0"
+    twenty-sdk: "npm:2.1.0"
     typescript: "npm:^5.9.3"
     vitest: "npm:^3.1.1"
   languageName: unknown
   linkType: soft
 
-"twenty-sdk@npm:2.0.0":
-  version: 2.0.0
-  resolution: "twenty-sdk@npm:2.0.0"
+"twenty-sdk@npm:2.1.0":
+  version: 2.1.0
+  resolution: "twenty-sdk@npm:2.1.0"
   dependencies:
     "@genql/cli": "npm:^3.0.3"
     "@genql/runtime": "npm:^2.10.0"
@@ -3823,7 +3835,7 @@ __metadata:
     react: "npm:^19.0.0"
     react-dom: "npm:^19.0.0"
     tinyglobby: "npm:^0.2.15"
-    twenty-client-sdk: "npm:2.0.0"
+    twenty-client-sdk: "npm:2.1.0"
     typescript: "npm:^5.9.2"
     uuid: "npm:^13.0.0"
     vite: "npm:^7.0.0"
@@ -3831,7 +3843,7 @@ __metadata:
     zod: "npm:^4.1.11"
   bin:
     twenty: dist/cli.cjs
-  checksum: 10c0/ea0d50a002e88b177555987840fa9dfeda0f3482f42240bda04a79485f69e9717492a265de8080f599e03960859cbcab0e686c6b6bf8fe0872139f9dc1645dd5
+  checksum: 10c0/6584e50b1b8c861ef3c7593f9fea47adbc5a77ef1221076e861dca425cf334335d67111645775ca318c9fc9a6ad513032e619f9cba6f01bf5ddfb22f897248b7
   languageName: node
   linkType: hard
 
