@@ -1,10 +1,18 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useState } from 'react';
 
 import { TRIGGER_SYNC_MUTATION } from '../graphql/premaccess.queries';
 
 type Props = {
   connectorId: string;
+};
+
+type TriggerSyncResult = {
+  triggerSync: {
+    id: string;
+    status: string;
+    startedAt: string;
+  };
 };
 
 /**
@@ -15,7 +23,8 @@ type Props = {
  * status. Polling for live progress is a follow-up.
  */
 export const SyncTrigger = ({ connectorId }: Props) => {
-  const [trigger, { data, loading, error }] = useMutation(TRIGGER_SYNC_MUTATION);
+  const [trigger, { data, loading, error }] =
+    useMutation<TriggerSyncResult>(TRIGGER_SYNC_MUTATION);
   const [lastMode, setLastMode] = useState<string | null>(null);
 
   const run = (mode: 'DELTA' | 'FULL', dryRun: boolean) => {
