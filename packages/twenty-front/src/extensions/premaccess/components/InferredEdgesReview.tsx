@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 
 import {
   INFERRED_EDGES_PENDING_QUERY,
@@ -9,6 +9,18 @@ import {
 type Props = {
   workspaceId: string;
   minConfidence?: number;
+};
+
+type InferredEdge = {
+  runId: string;
+  semanticType: string;
+  fromObject: string;
+  fromTwentyId: string;
+  toObject: string;
+  toTwentyId: string;
+  confidence: number;
+  evidence: string | null;
+  parentTitle: string | null;
 };
 
 /**
@@ -23,7 +35,9 @@ type Props = {
  * specific record). For now this is a standalone page.
  */
 export const InferredEdgesReview = ({ workspaceId, minConfidence = 0.7 }: Props) => {
-  const { data, loading, error, refetch } = useQuery(INFERRED_EDGES_PENDING_QUERY, {
+  const { data, loading, error, refetch } = useQuery<{
+    inferredEdgesPending: InferredEdge[];
+  }>(INFERRED_EDGES_PENDING_QUERY, {
     variables: { workspaceId, minConfidence },
   });
   const [promote, { loading: promoting }] = useMutation(PROMOTE_INFERRED_EDGE_MUTATION);
@@ -71,9 +85,9 @@ export const InferredEdgesReview = ({ workspaceId, minConfidence = 0.7 }: Props)
             </tr>
           </thead>
           <tbody>
-            {edges.map((e: any) => (
+            {edges.map((e) => (
               <tr key={`${e.runId}_${e.semanticType}_${e.fromTwentyId}_${e.toTwentyId}`}>
-                <td>{(e.confidence as number).toFixed(2)}</td>
+                <td>{e.confidence.toFixed(2)}</td>
                 <td><code>{e.semanticType}</code></td>
                 <td>{e.parentTitle ?? e.fromTwentyId.slice(0, 8)}</td>
                 <td>{e.toObject} · {e.toTwentyId.slice(0, 8)}</td>
