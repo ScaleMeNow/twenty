@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 import { CONNECTORS_QUERY } from '../graphql/premaccess.queries';
 
