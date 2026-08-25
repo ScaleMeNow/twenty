@@ -33,6 +33,8 @@ import { UserService } from 'src/engine/core-modules/user/services/user.service'
 import { type UserEntity } from 'src/engine/core-modules/user/user.entity';
 import { WorkspaceEntity } from 'src/engine/core-modules/workspace/workspace.entity';
 
+const PASSWORD_RESET_TOKEN_HASH_BYTE_LENGTH = 32;
+
 @Injectable()
 export class ResetPasswordService {
   private readonly logger = new Logger(ResetPasswordService.name);
@@ -137,10 +139,9 @@ export class ResetPasswordService {
     userId: string;
     resetToken: PasswordResetToken;
   }): Promise<void> {
-    const hashedResetToken = crypto
-      .createHash('sha256')
-      .update(resetToken.passwordResetToken)
-      .digest('hex');
+    const hashedResetToken = this.hashPasswordResetToken(
+      resetToken.passwordResetToken,
+    );
 
     await this.appTokenRepository.manager.transaction(async (entityManager) => {
       const appTokenRepository = entityManager.getRepository(AppTokenEntity);
@@ -163,6 +164,30 @@ export class ResetPasswordService {
         type: AppTokenType.PasswordResetToken,
       });
     });
+  }
+
+  // Lookup is a single indexed query on the stored value, so the derivation has to stay
+  // deterministic: scrypt is keyed with APP_SECRET rather than salted per row. SHA-256
+  // would be enough for a 256-bit random token, but a "password"-named value reaching a
+  // fast digest is reported as js/insufficient-password-hash, and the pepper earns its
+  // cost on an endpoint that is already captcha-gated and throttled.
+  private hashPasswordResetToken(plainResetToken: string): string {
+    const appSecret = this.twentyConfigService.get('APP_SECRET');
+
+    if (!appSecret) {
+      throw new AuthException(
+        'APP_SECRET constant value not found',
+        AuthExceptionCode.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return crypto
+      .scryptSync(
+        plainResetToken,
+        appSecret,
+        PASSWORD_RESET_TOKEN_HASH_BYTE_LENGTH,
+      )
+      .toString('hex');
   }
 
   private async resolveTargetWorkspace(
@@ -254,10 +279,7 @@ export class ResetPasswordService {
   async validatePasswordResetToken(
     resetToken: string,
   ): Promise<ValidatePasswordResetTokenDTO> {
-    const hashedResetToken = crypto
-      .createHash('sha256')
-      .update(resetToken)
-      .digest('hex');
+    const hashedResetToken = this.hashPasswordResetToken(resetToken);
 
     const token = await this.appTokenRepository.findOne({
       where: {
