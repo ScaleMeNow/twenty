@@ -79,7 +79,7 @@ jobs:
             ["packages/twenty-server/test/integration/graphql/utils/forge-legacy-hs256-token.util.ts"]=24
             # js/xss-through-dom: href sanitizer behind ContactLink, RoundedLink,
             # LinkifiedText (alerts 25, 26, 27)
-            ["packages/twenty-ui/src/utilities/utils/getSafeUrl.ts"]=24
+            ["packages/twenty-ui/src/utilities/utils/getSafeUrl.ts"]=32
             ["packages/twenty-ui/src/utilities/utils/__tests__/getSafeUrl.test.ts"]=20
             # js/weak-cryptographic-algorithm: SQL result alias digest (alert 30)
             ["packages/twenty-server/src/engine/twenty-orm-v2/sql/utils/build-column-result-alias.util.ts"]=6
