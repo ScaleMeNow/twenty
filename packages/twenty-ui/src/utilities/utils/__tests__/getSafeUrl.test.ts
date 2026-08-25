@@ -35,6 +35,7 @@ describe('getSafeUrl', () => {
 
   it('rejects protocol-relative urls that point at another origin', () => {
     expect(getSafeUrl('//evil.com')).toBeUndefined();
+    expect(getSafeUrl('//relative.invalid.evil.com/path')).toBeUndefined();
   });
 
   it('returns undefined for empty or nullish values', () => {
