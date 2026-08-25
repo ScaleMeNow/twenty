@@ -11,6 +11,11 @@
 #   - packages/twenty-front/src/App.tsx:           ≤ 1 added line  (or src/index.tsx)
 #   - anything under packages/premaccess/:         unrestricted
 #   - anything under packages/twenty-front/src/extensions/premaccess/: unrestricted
+#
+# The SECURITY PATCHES block below is a second, narrower kind of exception: upstream
+# files carrying a fix for a code-scanning alert that upstream has not fixed yet. Each
+# entry is meant to be deleted the moment the corresponding upstream fix lands, so keep
+# the caps tight and keep the alert id next to the entry.
 
 name: premaccess-fork-gate
 
@@ -59,6 +64,17 @@ jobs:
             ["package.json"]=2
             ["packages/twenty-docker/twenty/Dockerfile"]=10
             ["yarn.lock"]=50
+            # --- SECURITY PATCHES (drop when upstream fixes the alert) ---
+            # js/insufficient-password-hash: reset token hashing (alert 23)
+            ["packages/twenty-server/src/engine/core-modules/auth/services/reset-password.service.ts"]=32
+            # js/insufficient-password-hash: legacy HS256 test helper (alert 24)
+            ["packages/twenty-server/test/integration/graphql/utils/forge-legacy-hs256-token.util.ts"]=24
+            # js/xss-through-dom: href sanitizer behind ContactLink, RoundedLink,
+            # LinkifiedText (alerts 25, 26, 27)
+            ["packages/twenty-ui/src/utilities/utils/getSafeUrl.ts"]=24
+            ["packages/twenty-ui/src/utilities/utils/__tests__/getSafeUrl.test.ts"]=20
+            # js/weak-cryptographic-algorithm: SQL result alias digest (alert 30)
+            ["packages/twenty-server/src/engine/twenty-orm-v2/sql/utils/build-column-result-alias.util.ts"]=6
           )
 
           violations=0
