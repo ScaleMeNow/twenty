@@ -59,11 +59,19 @@ jobs:
             ["packages/twenty-server/src/engine/api/graphql/graphql-config/graphql-config.service.ts"]=2
             ["packages/twenty-front/src/App.tsx"]=1
             ["packages/twenty-front/src/index.tsx"]=1
-            ["packages/twenty-front/src/modules/app/hooks/useCreateAppRouter.tsx"]=2
+            # upstream renamed useCreateAppRouter.tsx to useCreateWorkspaceAppRouter.tsx
+            ["packages/twenty-front/src/modules/app/hooks/useCreateWorkspaceAppRouter.tsx"]=2
             ["packages/twenty-front/src/modules/navigation/components/NavigationDrawerOtherSection.tsx"]=8
             ["package.json"]=2
             ["packages/twenty-docker/twenty/Dockerfile"]=10
-            ["yarn.lock"]=50
+            # yarn.lock grows with every fork dependency plus upstream drift; it never
+            # conflicts in a way that makes a rebase expensive, so the cap only exists to
+            # catch a lockfile that has clearly gone off the rails.
+            ["yarn.lock"]=120
+            # fork-only CodeBuild spec for the BAM-hosted image build, absent upstream
+            [".bam-image-build-buildspec.yml"]=40
+            # premaccess is a workspace package, so twenty-server declares it as a dep
+            ["packages/twenty-server/package.json"]=2
             # --- SECURITY PATCHES (drop when upstream fixes the alert) ---
             # js/insufficient-password-hash: reset token hashing (alert 23)
             ["packages/twenty-server/src/engine/core-modules/auth/services/reset-password.service.ts"]=32
