@@ -15,7 +15,9 @@ export const buildColumnResultAlias = (
     return resultAlias;
   }
 
-  return createHash('sha1')
+  // The digest only shortens an identifier, it guards nothing, but SHA-1 is reported as
+  // weak crypto wherever it appears; a truncated SHA-256 is just as collision-safe here.
+  return createHash('sha256')
     .update(resultAlias, 'utf8')
     .digest('hex')
     .slice(0, POSTGRES_MAX_ALIAS_LENGTH);
