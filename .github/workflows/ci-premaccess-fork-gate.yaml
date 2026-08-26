@@ -82,7 +82,8 @@ jobs:
             ["packages/twenty-ui/src/utilities/utils/getSafeUrl.ts"]=32
             ["packages/twenty-ui/src/utilities/utils/__tests__/getSafeUrl.test.ts"]=20
             # js/weak-cryptographic-algorithm: SQL result alias digest (alert 30)
-            ["packages/twenty-server/src/engine/twenty-orm-v2/sql/utils/build-column-result-alias.util.ts"]=6
+            # upstream promoted twenty-orm-v2 to twenty-orm
+            ["packages/twenty-server/src/engine/twenty-orm/sql/utils/build-column-result-alias.util.ts"]=6
           )
 
           violations=0
