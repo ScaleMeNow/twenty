@@ -1,21 +1,26 @@
-# Premaccess fork CI gate — enforces "touch ≤ 1 upstream file" on every PR.
+# Premaccess fork CI gate — keeps the fork's diff vs twentyhq/twenty a small known set.
 #
 # This is the load-bearing rule of the fork strategy (docs/TWENTY-FORK-PLAN.md
 # §4 in ScaleMeNow/meta-dojo). Without this gate, the fork accumulates
 # unrelated upstream edits and rebase against twentyhq/twenty's main eventually
-# becomes intractable. With it, the rebase tax stays ~0 because our diff
-# vs upstream is always a small known set.
+# becomes intractable. With it, the rebase tax stays ~0.
 #
-# Allowed deltas vs upstream/main:
-#   - packages/twenty-server/src/app.module.ts:   ≤ 2 added lines
-#   - packages/twenty-front/src/App.tsx:           ≤ 1 added line  (or src/index.tsx)
-#   - anything under packages/premaccess/:         unrestricted
-#   - anything under packages/twenty-front/src/extensions/premaccess/: unrestricted
+# Three kinds of allowance, all declared below — there is no advisory tier:
 #
-# The SECURITY PATCHES block below is a second, narrower kind of exception: upstream
-# files carrying a fix for a code-scanning alert that upstream has not fixed yet. Each
-# entry is meant to be deleted the moment the corresponding upstream fix lands, so keep
-# the caps tight and keep the alert id next to the entry.
+#   1. ALLOWED            — an exact upstream path with a cap on added lines.
+#                           Every entry must still differ from upstream, or the
+#                           gate fails: a stale entry is debt nobody can justify.
+#   2. dep_manifest_cap() — dependency manifests in nested workspaces. Dependabot
+#                           opens PRs against every manifest upstream ships, and
+#                           these files carry no rebase tax (a lockfile conflict is
+#                           resolved by regenerating, never by reading a diff).
+#   3. extension paths    — packages/premaccess/ and the twenty-front extensions
+#                           dir, unrestricted, excluded from the diff entirely.
+#
+# The SECURITY PATCHES block inside ALLOWED is the narrow case: upstream files
+# carrying a fix for a code-scanning alert upstream has not fixed yet. Each entry
+# keeps its alert id and is deleted the moment the upstream fix lands — the stale
+# check above makes that mandatory rather than optional.
 
 name: premaccess-fork-gate
 
@@ -28,25 +33,32 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: fork-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0           # need history to diff vs upstream/main
 
       - name: Fetch upstream
         run: |
           git remote add upstream https://github.com/twentyhq/twenty.git
-          git fetch upstream --quiet
+          git fetch --no-tags --quiet upstream main
 
       - name: Enforce extension-only invariant
         run: |
           set -euo pipefail
+
+          BASE="upstream/main"
+
           # Collect modified files vs upstream/main, excluding our extension paths.
           mapfile -t TOUCHED < <(
-            git diff --name-only "upstream/main"...HEAD -- \
+            git diff --name-only "$BASE"...HEAD -- \
               ':!packages/premaccess/' \
               ':!packages/twenty-front/src/extensions/premaccess/' \
               ':!.github/workflows/ci-premaccess-*' \
@@ -57,8 +69,6 @@ jobs:
           declare -A ALLOWED=(
             ["packages/twenty-server/src/app.module.ts"]=2
             ["packages/twenty-server/src/engine/api/graphql/graphql-config/graphql-config.service.ts"]=2
-            ["packages/twenty-front/src/App.tsx"]=1
-            ["packages/twenty-front/src/index.tsx"]=1
             # upstream renamed useCreateAppRouter.tsx to useCreateWorkspaceAppRouter.tsx
             ["packages/twenty-front/src/modules/app/hooks/useCreateWorkspaceAppRouter.tsx"]=2
             ["packages/twenty-front/src/modules/navigation/components/NavigationDrawerOtherSection.tsx"]=8
@@ -86,29 +96,82 @@ jobs:
             ["packages/twenty-server/src/engine/twenty-orm/sql/utils/build-column-result-alias.util.ts"]=6
           )
 
+          # Dependency manifests in nested workspaces. Matched only for paths that
+          # have no exact ALLOWED entry, so the tight caps on the root manifests and
+          # on packages/twenty-server/package.json still win. "binary" means the file
+          # is tracked as binary upstream and has no line count to cap.
+          dep_manifest_cap() {
+            case "$1" in
+              */.yarn/install-state.gz) echo binary ;;
+              */yarn.lock)              echo 400 ;;
+              */package.json)           echo 6 ;;
+              *)                        echo "" ;;
+            esac
+          }
+
           violations=0
+
           for f in "${TOUCHED[@]}"; do
             [ -z "$f" ] && continue
+
             cap="${ALLOWED[$f]:-}"
+            kind="allowed"
             if [ -z "$cap" ]; then
-              echo "::error file=$f::upstream file modified outside the two allowed locations"
+              cap="$(dep_manifest_cap "$f")"
+              kind="dep-manifest"
+            fi
+            if [ -z "$cap" ]; then
+              echo "::error file=$f::upstream file modified outside the declared allowances"
               violations=$((violations + 1))
               continue
             fi
-            added="$(git diff --numstat "upstream/main"...HEAD -- "$f" | awk '{print $1}')"
+
+            added="$(git diff --numstat "$BASE"...HEAD -- "$f" | awk 'NR==1 {print $1}')"
             added="${added:-0}"
-            if [ "$added" -gt "$cap" ]; then
-              echo "::error file=$f::has $added added lines vs upstream (cap: $cap)"
+
+            # numstat prints "-" for a binary file; there is no line count to compare.
+            if [ "$added" = "-" ]; then
+              if [ "$cap" = "binary" ]; then
+                echo "OK: $f (binary, $kind)"
+              else
+                echo "::error file=$f::is binary but its cap ($cap) expects a line count"
+                violations=$((violations + 1))
+              fi
+              continue
+            fi
+
+            if [ "$cap" = "binary" ]; then
+              echo "OK: $f (+$added line(s), no line cap, $kind)"
+            elif [ "$added" -gt "$cap" ]; then
+              echo "::error file=$f::has $added added lines vs upstream (cap: $cap, $kind)"
               violations=$((violations + 1))
             else
-              echo "OK: $f (+$added line(s) ≤ cap $cap)"
+              echo "OK: $f (+$added line(s) <= cap $cap, $kind)"
+            fi
+          done
+
+          # An ALLOWED entry that no longer differs from upstream is debt that can
+          # never fail on its own. Fail on it so it gets deleted.
+          for key in "${!ALLOWED[@]}"; do
+            still_touched=0
+            for f in "${TOUCHED[@]}"; do
+              if [ "$f" = "$key" ]; then
+                still_touched=1
+                break
+              fi
+            done
+            if [ "$still_touched" -eq 0 ]; then
+              echo "::error::ALLOWED entry '$key' no longer differs from upstream/main — delete it from the gate"
+              violations=$((violations + 1))
             fi
           done
 
           if [ "$violations" -gt 0 ]; then
             echo
             echo "Fork CI gate FAILED: $violations violation(s)."
-            echo "Move the change under packages/premaccess/ or packages/twenty-front/src/extensions/premaccess/."
+            echo "An upstream file outside the allowances must move under packages/premaccess/"
+            echo "or packages/twenty-front/src/extensions/premaccess/."
+            echo "A stale ALLOWED entry must be deleted from this workflow."
             echo "See docs/TWENTY-FORK-PLAN.md §4 (ScaleMeNow/meta-dojo)."
             exit 1
           fi
