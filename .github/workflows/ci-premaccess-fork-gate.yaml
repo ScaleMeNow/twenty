@@ -84,6 +84,10 @@ jobs:
             [".bam-image-build-buildspec.yml"]=40
             # premaccess is a workspace package, so twenty-server declares it as a dep
             ["packages/twenty-server/package.json"]=2
+            # danger-js timeout-minutes 5 -> 15; a lockfile change busts the
+            # node_modules cache key and the cold install alone exceeds 5 minutes.
+            # Upstream bug, not fork-specific — drop this when upstream raises it.
+            [".github/workflows/ci-utils.yaml"]=3
             # --- SECURITY PATCHES (drop when upstream fixes the alert) ---
             # js/insufficient-password-hash: reset token hashing (alert 23)
             ["packages/twenty-server/src/engine/core-modules/auth/services/reset-password.service.ts"]=32
