@@ -21,7 +21,9 @@ concurrency:
 
 jobs:
   danger-js:
-    timeout-minutes: 5
+    # The node_modules cache key is hashFiles('yarn.lock'), so any lockfile
+    # change forces a cold install, which alone exceeds 5 minutes.
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     if: github.event.action != 'closed'
     steps:
