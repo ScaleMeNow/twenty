@@ -72,12 +72,14 @@ jobs:
             # upstream renamed useCreateAppRouter.tsx to useCreateWorkspaceAppRouter.tsx
             ["packages/twenty-front/src/modules/app/hooks/useCreateWorkspaceAppRouter.tsx"]=2
             ["packages/twenty-front/src/modules/navigation/components/NavigationDrawerOtherSection.tsx"]=8
-            ["package.json"]=2
+            # root manifest: the premaccess workspace entry plus the security
+            # resolutions whose holds are listed in packages/premaccess/SECURITY-HOLDS.md
+            ["package.json"]=27
             ["packages/twenty-docker/twenty/Dockerfile"]=10
             # yarn.lock grows with every fork dependency plus upstream drift; it never
             # conflicts in a way that makes a rebase expensive, so the cap only exists to
             # catch a lockfile that has clearly gone off the rails.
-            ["yarn.lock"]=120
+            ["yarn.lock"]=400
             # fork-only CodeBuild spec for the BAM-hosted image build, absent upstream
             [".bam-image-build-buildspec.yml"]=40
             # premaccess is a workspace package, so twenty-server declares it as a dep
