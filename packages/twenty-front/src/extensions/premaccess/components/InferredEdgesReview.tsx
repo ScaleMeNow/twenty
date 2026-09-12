@@ -6,7 +6,7 @@ import {
   REJECT_INFERRED_EDGES_BELOW_MUTATION,
 } from '../graphql/premaccess.queries';
 
-type Props = {
+type InferredEdgesReviewProps = {
   workspaceId: string;
   minConfidence?: number;
 };
@@ -34,14 +34,21 @@ type InferredEdge = {
  * inline on any record-detail page later (showing inferred edges for that
  * specific record). For now this is a standalone page.
  */
-export const InferredEdgesReview = ({ workspaceId, minConfidence = 0.7 }: Props) => {
+export const InferredEdgesReview = ({
+  workspaceId,
+  minConfidence = 0.7,
+}: InferredEdgesReviewProps) => {
   const { data, loading, error, refetch } = useQuery<{
     inferredEdgesPending: InferredEdge[];
   }>(INFERRED_EDGES_PENDING_QUERY, {
     variables: { workspaceId, minConfidence },
   });
-  const [promote, { loading: promoting }] = useMutation(PROMOTE_INFERRED_EDGE_MUTATION);
-  const [rejectBelow, { loading: rejecting }] = useMutation(REJECT_INFERRED_EDGES_BELOW_MUTATION);
+  const [promote, { loading: promoting }] = useMutation(
+    PROMOTE_INFERRED_EDGE_MUTATION,
+  );
+  const [rejectBelow, { loading: rejecting }] = useMutation(
+    REJECT_INFERRED_EDGES_BELOW_MUTATION,
+  );
 
   if (loading) return <div>Loading inferred edges…</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -50,16 +57,27 @@ export const InferredEdgesReview = ({ workspaceId, minConfidence = 0.7 }: Props)
 
   return (
     <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+      <header
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+        }}
+      >
         <h2>AI-inferred associations</h2>
         <div>
           {edges.length > 0 && (
             <button
               onClick={async () => {
-                const ceil = window.prompt('Reject inferred edges below confidence:', '0.85');
+                const ceil = window.prompt(
+                  'Reject inferred edges below confidence:',
+                  '0.85',
+                );
                 if (!ceil) return;
                 const runId = edges[0].runId;
-                await rejectBelow({ variables: { runId, confidence: parseFloat(ceil) } });
+                await rejectBelow({
+                  variables: { runId, confidence: parseFloat(ceil) },
+                });
                 void refetch();
               }}
               disabled={rejecting}
@@ -86,11 +104,17 @@ export const InferredEdgesReview = ({ workspaceId, minConfidence = 0.7 }: Props)
           </thead>
           <tbody>
             {edges.map((e) => (
-              <tr key={`${e.runId}_${e.semanticType}_${e.fromTwentyId}_${e.toTwentyId}`}>
+              <tr
+                key={`${e.runId}_${e.semanticType}_${e.fromTwentyId}_${e.toTwentyId}`}
+              >
                 <td>{e.confidence.toFixed(2)}</td>
-                <td><code>{e.semanticType}</code></td>
+                <td>
+                  <code>{e.semanticType}</code>
+                </td>
                 <td>{e.parentTitle ?? e.fromTwentyId.slice(0, 8)}</td>
-                <td>{e.toObject} · {e.toTwentyId.slice(0, 8)}</td>
+                <td>
+                  {e.toObject} · {e.toTwentyId.slice(0, 8)}
+                </td>
                 <td>{e.evidence ?? '—'}</td>
                 <td>
                   <button
