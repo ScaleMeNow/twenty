@@ -41,5 +41,9 @@
     "sharp": "^0.35.3",
     "uuid": "^11.1.1",
     "winston": "^3.14.2"
+  },
+  "//resolutions": "body-parser/qs 6.16.0 -> qs GHSA-q8mj-m7cp-5q26; body-parser 1.20.x declares qs ~6.15.1, which cannot reach 6.16.0, so no parent bump carries the fix. Same entry as the root package.json. Drop once body-parser depends on qs >=6.16.0.",
+  "resolutions": {
+    "body-parser/qs": "6.16.0"
   }
 }
