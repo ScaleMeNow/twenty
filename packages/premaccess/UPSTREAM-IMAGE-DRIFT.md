@@ -53,3 +53,7 @@ TWENTY_API_URL=http://localhost:2021 TWENTY_API_KEY=<seeded key> yarn test
 
 The seeded key is the `api-key` output of
 `.github/actions/spawn-twenty-app-dev-test`.
+
+To run both arms for one app in CI without touching its files, dispatch
+`CI Twenty Apps` on the branch with the `application` input set to the app folder
+name — `changed-only` discovery is bypassed for `workflow_dispatch`.
