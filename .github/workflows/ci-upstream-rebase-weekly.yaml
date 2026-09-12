@@ -111,7 +111,7 @@ jobs:
           Automated rebase of \`main\` ($AHEAD fork commits) onto \`upstream/main\` (twentyhq/twenty, $BEHIND new commits).
 
           - Rebase: clean
-          - Gates: \`premaccess-fork-gate\` + upstream CI run on this PR
+          - Gates: \`premaccess-fork-gate\` + \`premaccess-rebase-verify\` run on the branch push (this PR is CONFLICTING by construction, so no \`pull_request\` workflow runs on it)
           - Check the upstream diff for \`upstream-exit\` triggers (\`packages/premaccess/upstream-exit.yaml\`)
 
           **Merge = fast-forward main onto this branch, from a checkout — not the GitHub merge button:**
