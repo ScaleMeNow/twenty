@@ -1,9 +1,10 @@
 import { useMutation } from '@apollo/client/react';
 import { useState } from 'react';
+import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 import { TRIGGER_SYNC_MUTATION } from '../graphql/premaccess.queries';
 
-type Props = {
+type SyncTriggerProps = {
   connectorId: string;
 };
 
@@ -22,9 +23,10 @@ type TriggerSyncResult = {
  * Delta, Full. Calls `triggerSync` and shows the resulting Sync row's
  * status. Polling for live progress is a follow-up.
  */
-export const SyncTrigger = ({ connectorId }: Props) => {
-  const [trigger, { data, loading, error }] =
-    useMutation<TriggerSyncResult>(TRIGGER_SYNC_MUTATION);
+export const SyncTrigger = ({ connectorId }: SyncTriggerProps) => {
+  const [trigger, { data, loading, error }] = useMutation<TriggerSyncResult>(
+    TRIGGER_SYNC_MUTATION,
+  );
   const [lastMode, setLastMode] = useState<string | null>(null);
 
   const run = (mode: 'DELTA' | 'FULL', dryRun: boolean) => {
@@ -33,12 +35,24 @@ export const SyncTrigger = ({ connectorId }: Props) => {
   };
 
   return (
-    <div style={{ padding: 12, border: '1px solid #ececec', borderRadius: 4 }}>
+    <div
+      style={{
+        padding: 12,
+        border: `1px solid ${themeCssVariables.border.color.light}`,
+        borderRadius: 4,
+      }}
+    >
       <h3>Run sync</h3>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => run('DELTA', true)} disabled={loading}>Dry-run delta</button>
-        <button onClick={() => run('DELTA', false)} disabled={loading}>Run delta</button>
-        <button onClick={() => run('FULL', false)} disabled={loading}>Full re-sync</button>
+        <button onClick={() => run('DELTA', true)} disabled={loading}>
+          Dry-run delta
+        </button>
+        <button onClick={() => run('DELTA', false)} disabled={loading}>
+          Run delta
+        </button>
+        <button onClick={() => run('FULL', false)} disabled={loading}>
+          Full re-sync
+        </button>
       </div>
       {loading && <p>Starting {lastMode}…</p>}
       {error && <p style={{ color: 'crimson' }}>Failed: {error.message}</p>}
