@@ -1,0 +1,100 @@
+# Premaccess fork — verification of a rebase branch, driven by the PUSH, not the PR.
+#
+# A rebase PR (ci/rebase-YYYY-MM-DD → main) always reports CONFLICTING on
+# GitHub: both sides carry the same fork commits on different bases. GitHub
+# does not compute a merge ref for a conflicting PR, so none of upstream's
+# `pull_request` workflows (CI Front, CI Server, CI UI, ...) run on it -- only
+# `pull_request_target` and CodeQL do. Every rebase PR before this file looked
+# green because nothing had run.
+#
+# So this workflow runs on the push of the rebase branch itself and executes
+# the tasks upstream's CI would have run for the projects the fork touches,
+# against the whole project (not `nx affected`, whose base is the old main and
+# is meaningless across a rebase). The upstream composite actions are reused
+# as-is; nothing here edits an upstream workflow, so it carries no rebase tax.
+#
+# Reference: docs/TWENTY-FORK-PLAN.md §6 in ScaleMeNow/meta-dojo.
+
+name: premaccess-rebase-verify
+
+on:
+  push:
+    branches: ['ci/rebase-**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rebase-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_OPTIONS: '--max-old-space-size=6144'
+
+jobs:
+  front:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest-8-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [lint, typecheck, test]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 10
+      - name: Install dependencies
+        uses: ./.github/actions/yarn-install
+      - name: Reset .env
+        run: npx nx reset:env twenty-front
+      - name: Front / ${{ matrix.task }} (twenty-shared, twenty-ui, twenty-front)
+        run: >-
+          npx nx run-many --nxBail --outputStyle=stream --configuration=ci
+          -t ${{ matrix.task }} -p twenty-shared,twenty-ui,twenty-front
+
+  server:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest-8-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [lint, typecheck, test]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 10
+      - name: Install dependencies
+        uses: ./.github/actions/yarn-install
+      - name: Build twenty-shared
+        run: npx nx build twenty-shared
+      - name: Build premaccess (imported by twenty-server)
+        run: npx nx build premaccess
+      - name: Reset .env
+        run: npx nx reset:env twenty-server
+      - name: Server / ${{ matrix.task }} (twenty-server)
+        run: >-
+          npx nx run-many --nxBail --outputStyle=stream --configuration=ci
+          -t ${{ matrix.task }} -p twenty-server
+
+  build:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest-8-cores
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 10
+      - name: Install dependencies
+        uses: ./.github/actions/yarn-install
+      - name: Build twenty-shared
+        run: npx nx build twenty-shared
+      - name: Build premaccess
+        run: npx nx build premaccess
+      - name: Reset .env
+        run: |
+          npx nx reset:env twenty-server
+          npx nx reset:env twenty-front
+      - name: Build twenty-server
+        run: npx nx build twenty-server
+      - name: Build twenty-front
+        run: npx nx build twenty-front
