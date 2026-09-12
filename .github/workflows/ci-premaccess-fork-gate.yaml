@@ -88,6 +88,12 @@ jobs:
             # node_modules cache key and the cold install alone exceeds 5 minutes.
             # Upstream bug, not fork-specific — drop this when upstream raises it.
             [".github/workflows/ci-utils.yaml"]=3
+            # --- UPSTREAM FORWARD-PORTS (drop when the rebase brings them in) ---
+            # CANVAS tab widgets carry upstream's own position form, without which
+            # the published server derives GRID from the legacy gridPosition key
+            # and refuses the app sync (twentyhq/twenty#25513).
+            ["packages/twenty-apps/internal/twenty-partners/src/modules/partner/self-service/page-layouts/my-profile.page-layout.ts"]=1
+            ["packages/twenty-apps/internal/twenty-partners/src/modules/partner/self-service/page-layouts/my-case-studies.page-layout.ts"]=1
             # --- SECURITY PATCHES (drop when upstream fixes the alert) ---
             # js/insufficient-password-hash: reset token hashing (alert 23)
             ["packages/twenty-server/src/engine/core-modules/auth/services/reset-password.service.ts"]=32

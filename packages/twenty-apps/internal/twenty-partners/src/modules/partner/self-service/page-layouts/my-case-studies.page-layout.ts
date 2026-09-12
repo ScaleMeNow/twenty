@@ -23,7 +23,7 @@ export default definePageLayout({
           universalIdentifier: MY_CASE_STUDIES_PAGE_WIDGET_ID,
           title: 'My Case Studies',
           type: 'FRONT_COMPONENT',
-          gridPosition: { row: 0, column: 0, rowSpan: 14, columnSpan: 12 },
+          position: { layoutMode: PageLayoutTabLayoutMode.CANVAS },
           configuration: {
             configurationType: 'FRONT_COMPONENT',
             frontComponentUniversalIdentifier: MY_CASE_STUDIES_FRONT_COMPONENT_ID,
