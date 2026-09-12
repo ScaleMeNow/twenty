@@ -79,8 +79,9 @@ jobs:
             # an extension section mounted by one import + one JSX line
             ["packages/twenty-front/src/modules/navigation/components/MainNavigationDrawerScrollableItems.tsx"]=2
             # root manifest: the premaccess workspace entry plus the security
-            # resolutions whose holds are listed in packages/premaccess/SECURITY-HOLDS.md
-            ["package.json"]=33
+            # resolutions whose holds are listed in packages/premaccess/SECURITY-HOLDS.md;
+            # every entry is named in "//resolutions" with the condition that retires it
+            ["package.json"]=36
             ["packages/twenty-docker/twenty/Dockerfile"]=10
             # yarn.lock grows with every fork dependency plus upstream drift; it never
             # conflicts in a way that makes a rebase expensive, so the cap only exists to
