@@ -1,12 +1,28 @@
 # Premaccess fork — weekly automated rebase against twentyhq/twenty:main.
 #
-# Outcome:
-#   clean rebase + green checks → opens a "Weekly rebase YYYY-MM-DD" PR
-#   clean rebase but checks red → opens the PR labeled `rebase-checks-red`
-#   rebase conflict             → opens an issue with the conflicting file list,
-#                                  labeled `rebase-conflict`, linking the §7 playbook
+# Outcome, exactly one of:
+#   clean rebase    → pushes ci/rebase-YYYY-MM-DD and opens a "Weekly upstream
+#                     rebase" PR; the fork gate + upstream CI run on that PR.
+#   rebase conflict → opens (or updates) the single open `rebase-conflict` issue
+#                     with the conflicting file list, writes the same list to the
+#                     job summary, and FAILS the job so the run is red.
+#   nothing to do   → main already contains upstream/main; green, no PR.
 #
-# Manual trigger via the workflow_dispatch event is also supported.
+# Merging a rebase PR is a fast-forward of main onto the rebased branch, done
+# from a checkout (the fork's history is linear on top of upstream, never a merge):
+#
+#   git fetch origin && git push-confirm --force-with-lease origin origin/<branch>:main
+#
+# GitHub's "Rebase and merge" would replay every upstream commit on top of the old
+# main and duplicate ours; "Merge" would add a merge commit that upstream's next
+# rebase turns into a conflict. Neither is used.
+#
+# History: from 2026-08-03 to 2026-09-07 every scheduled run failed silently —
+# the rebase hit a conflict, the issue step needed Issues (disabled on the fork),
+# and nothing else reported it. The fork drifted 544 commits behind before a
+# human looked. Issues are now enabled, the conflict path fails the job, and the
+# outcome (merge-base age vs upstream) is watched daily from outside GitHub by
+# routine-health.py, which does not depend on this workflow running at all.
 #
 # Reference: docs/TWENTY-FORK-PLAN.md §6 + §7 in ScaleMeNow/meta-dojo.
 
@@ -22,6 +38,10 @@ permissions:
   pull-requests: write
   issues: write
 
+concurrency:
+  group: upstream-rebase-weekly
+  cancel-in-progress: false
+
 jobs:
   rebase:
     runs-on: ubuntu-latest
@@ -31,7 +51,7 @@ jobs:
           git config --global user.email "ci-rebase@scalemenow.com"
           git config --global user.name "premaccess-rebase-bot"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -39,22 +59,36 @@ jobs:
       - name: Fetch upstream
         run: |
           git remote add upstream https://github.com/twentyhq/twenty.git
-          git fetch upstream --quiet
-          git fetch origin --quiet
+          git fetch --no-tags --quiet upstream main
+          git fetch --quiet origin
 
       - name: Attempt rebase
         id: rebase
-        continue-on-error: true
         run: |
           set -euo pipefail
-          BRANCH="ci/rebase-$(date +%Y-%m-%d)"
+          BRANCH="ci/rebase-$(date -u +%Y-%m-%d)"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          BEHIND="$(git rev-list --count origin/main..upstream/main)"
+          AHEAD="$(git rev-list --count upstream/main..origin/main)"
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          echo "ahead=$AHEAD" >> "$GITHUB_OUTPUT"
+          echo "origin/main is $AHEAD ahead, $BEHIND behind upstream/main"
+
+          if [ "$BEHIND" -eq 0 ]; then
+            echo "status=current" >> "$GITHUB_OUTPUT"
+            echo "## Weekly rebase: nothing to do" >> "$GITHUB_STEP_SUMMARY"
+            echo "main already contains upstream/main ($AHEAD fork commits on top)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
           git checkout -B "$BRANCH" origin/main
           if git rebase upstream/main; then
             echo "status=clean" >> "$GITHUB_OUTPUT"
           else
             echo "status=conflict" >> "$GITHUB_OUTPUT"
             git diff --name-only --diff-filter=U | sort -u > /tmp/conflicts.txt
+            echo "stopped_at=$(git log -1 --format='%h %s' REBASE_HEAD)" >> "$GITHUB_OUTPUT"
             git rebase --abort
           fi
 
@@ -67,44 +101,90 @@ jobs:
         if: steps.rebase.outputs.status == 'clean'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AHEAD: $AHEAD
+          BEHIND: $BEHIND
         run: |
+          set -euo pipefail
           BRANCH="${{ steps.rebase.outputs.branch }}"
-          DATE="$(date +%Y-%m-%d)"
-          gh pr create --base main --head "$BRANCH" \
-            --title "Weekly upstream rebase $DATE" \
-            --body "$(cat <<EOF
-          Automated rebase of \`main\` against \`upstream/main\` (twentyhq/twenty).
-
-          Source playbook: \`docs/TWENTY-FORK-PLAN.md\` §6 + §7 (ScaleMeNow/meta-dojo).
+          DATE="$(date -u +%Y-%m-%d)"
+          BODY="$(cat <<EOF
+          Automated rebase of \`main\` ($AHEAD fork commits) onto \`upstream/main\` (twentyhq/twenty, $BEHIND new commits).
 
           - Rebase: clean
-          - Next: CI must pass; review the upstream diff for any
-            \`upstream-exit\` triggers (e.g. did Twenty merge a generic polymorphic
-            target? if yes, see \`packages/premaccess/upstream-exit.yaml\`).
-          EOF
-          )" || echo "PR already exists for $BRANCH"
+          - Gates: \`premaccess-fork-gate\` + upstream CI run on this PR
+          - Check the upstream diff for \`upstream-exit\` triggers (\`packages/premaccess/upstream-exit.yaml\`)
 
-      - name: Open conflict issue
+          **Merge = fast-forward main onto this branch, from a checkout — not the GitHub merge button:**
+
+              git fetch origin
+              git push-confirm --force-with-lease origin origin/$BRANCH:main
+
+          Source playbook: \`docs/TWENTY-FORK-PLAN.md\` §6 + §7 (ScaleMeNow/meta-dojo).
+          EOF
+          )"
+          EXISTING="$(gh pr list --head "$BRANCH" --state open --json number -q '.[0].number')"
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" --body "$BODY"
+            echo "PR #$EXISTING already open for $BRANCH, body refreshed"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "Weekly upstream rebase $DATE" --body "$BODY"
+          fi
+          echo "## Weekly rebase: PR ready" >> "$GITHUB_STEP_SUMMARY"
+          gh pr list --head "$BRANCH" --state open --json url -q '.[0].url' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Report conflict (issue + summary), then fail
         if: steps.rebase.outputs.status == 'conflict'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STOPPED_AT: $STOPPED_AT
+          AHEAD: $AHEAD
+          BEHIND: $BEHIND
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          CONFLICTS="$(cat /tmp/conflicts.txt | head -50)"
-          gh issue create --title "Weekly rebase conflict $(date +%Y-%m-%d)" \
-            --label rebase-conflict \
-            --body "$(cat <<EOF
-          The Monday weekly rebase against \`upstream/main\` failed with conflicts.
+          set -euo pipefail
+          CONFLICTS="$(head -50 /tmp/conflicts.txt)"
+          DATE="$(date -u +%Y-%m-%d)"
+          BODY="$(cat <<EOF
+          The weekly rebase of \`main\` ($AHEAD fork commits) onto \`upstream/main\` ($BEHIND new upstream commits) stopped at:
+
+              $STOPPED_AT
 
           **Conflicting files:**
           \`\`\`
           $CONFLICTS
           \`\`\`
 
-          **Playbook:** \`docs/TWENTY-FORK-PLAN.md\` §7 in ScaleMeNow/meta-dojo
-          covers the five conflict buckets we actually hit (renamed services,
-          changed entity FKs, upstream merging our feature, …) with the right
-          fix for each.
+          Resolve from a checkout: \`bash scripts/fork-rebase-weekly.sh\` in ScaleMeNow/meta-dojo reproduces the rebase; \`docs/TWENTY-FORK-PLAN.md\` §7 covers the five conflict buckets. Push the resolved branch and open the rebase PR by hand; the next Monday run closes this issue when main is current.
 
-          Until resolved, customers stay on the prior \`release/<version>\` branch.
+          Run: $RUN_URL
           EOF
           )"
+          EXISTING="$(gh issue list --label rebase-conflict --state open --json number -q '.[0].number')"
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+            gh issue edit "$EXISTING" --title "Weekly rebase conflict (since first seen, latest $DATE)"
+            echo "commented on open rebase-conflict issue #$EXISTING"
+          else
+            gh issue create --title "Weekly rebase conflict $DATE" --label rebase-conflict --body "$BODY"
+          fi
+          {
+            echo "## Weekly rebase: CONFLICT"
+            echo
+            echo "Stopped at \`$STOPPED_AT\`"
+            echo
+            echo '```'
+            echo "$CONFLICTS"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::rebase onto upstream/main conflicts in $(wc -l < /tmp/conflicts.txt) file(s); see the rebase-conflict issue"
+          exit 1
+
+      - name: Close stale conflict issues when main is current
+        if: steps.rebase.outputs.status == 'current'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for n in $(gh issue list --label rebase-conflict --state open --json number -q '.[].number'); do
+            gh issue close "$n" --comment "main now contains upstream/main; closing."
+          done
