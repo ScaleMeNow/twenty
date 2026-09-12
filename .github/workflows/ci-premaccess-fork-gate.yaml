@@ -28,7 +28,9 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    # ci/rebase-**: a rebase PR is always CONFLICTING against main, so GitHub runs
+    # no pull_request workflow on it -- the gate has to run on the branch push.
+    branches: [main, 'ci/rebase-**']
 
 permissions:
   contents: read
