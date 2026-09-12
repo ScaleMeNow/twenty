@@ -38,7 +38,10 @@ export const RECENT_SYNCS_QUERY = gql`
 
 export const INFERRED_EDGES_PENDING_QUERY = gql`
   query InferredEdgesPending($workspaceId: ID!, $minConfidence: Float) {
-    inferredEdgesPending(workspaceId: $workspaceId, minConfidence: $minConfidence) {
+    inferredEdgesPending(
+      workspaceId: $workspaceId
+      minConfidence: $minConfidence
+    ) {
       runId
       semanticType
       fromObject

@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { SET_FIELD_MAPPING_MUTATION } from '../graphql/premaccess.queries';
 
-type Props = {
+type ConnectorMappingProps = {
   connectorId: string;
   /** Source schema rows from the `schema-report` API (Phase 13 already produces this). */
   sourceProperties: Array<{
@@ -12,7 +12,11 @@ type Props = {
     sourceType: string;
     currentAction?: 'alias' | 'custom' | 'ignore';
     currentTwentyField?: string | null;
-    aiSuggestion?: { action: 'alias' | 'custom'; twentyField: string; confidence: number };
+    aiSuggestion?: {
+      action: 'alias' | 'custom';
+      twentyField: string;
+      confidence: number;
+    };
   }>;
   /** Twenty's manifest field list, keyed by object. */
   twentyFieldsByObject: Record<string, Array<{ name: string; type: string }>>;
@@ -29,19 +33,33 @@ type Props = {
  * search, the drag-to-alias UX. The scaffold below shows the contract; the UX
  * polish ships incrementally.
  */
-export const ConnectorMapping = ({ connectorId, sourceProperties, twentyFieldsByObject }: Props) => {
+export const ConnectorMapping = ({
+  connectorId,
+  sourceProperties,
+  twentyFieldsByObject,
+}: ConnectorMappingProps) => {
   const [setMapping] = useMutation(SET_FIELD_MAPPING_MUTATION);
-  const [localState, setLocalState] = useState<Record<string, { action: string; twentyField: string }>>({});
+  const [localState, setLocalState] = useState<
+    Record<string, { action: string; twentyField: string }>
+  >({});
 
   const update = (
-    twentyObject: string, sourceProperty: string, action: string, twentyField: string,
+    twentyObject: string,
+    sourceProperty: string,
+    action: string,
+    twentyField: string,
   ) => {
     const key = `${twentyObject}/${sourceProperty}`;
     setLocalState((s) => ({ ...s, [key]: { action, twentyField } }));
     void setMapping({
       variables: {
-        input: { connectorId, twentyObject, sourceProperty, action,
-                 twentyField: action === 'ignore' ? null : twentyField },
+        input: {
+          connectorId,
+          twentyObject,
+          sourceProperty,
+          action,
+          twentyField: action === 'ignore' ? null : twentyField,
+        },
       },
     });
   };
@@ -70,13 +88,24 @@ export const ConnectorMapping = ({ connectorId, sourceProperties, twentyFieldsBy
             const fields = twentyFieldsByObject[p.twentyObject] ?? [];
             return (
               <tr key={key}>
-                <td><code>{p.twentyObject}</code></td>
-                <td><code>{p.sourceProperty}</code></td>
+                <td>
+                  <code>{p.twentyObject}</code>
+                </td>
+                <td>
+                  <code>{p.sourceProperty}</code>
+                </td>
                 <td>{p.sourceType}</td>
                 <td>
                   <select
                     value={current.action}
-                    onChange={(e) => update(p.twentyObject, p.sourceProperty, e.target.value, current.twentyField)}
+                    onChange={(e) =>
+                      update(
+                        p.twentyObject,
+                        p.sourceProperty,
+                        e.target.value,
+                        current.twentyField,
+                      )
+                    }
                   >
                     <option value="alias">alias</option>
                     <option value="custom">custom TEXT</option>
@@ -84,14 +113,25 @@ export const ConnectorMapping = ({ connectorId, sourceProperties, twentyFieldsBy
                   </select>
                 </td>
                 <td>
-                  {current.action === 'ignore' ? <span>—</span> : (
+                  {current.action === 'ignore' ? (
+                    <span>—</span>
+                  ) : (
                     <select
                       value={current.twentyField}
-                      onChange={(e) => update(p.twentyObject, p.sourceProperty, current.action, e.target.value)}
+                      onChange={(e) =>
+                        update(
+                          p.twentyObject,
+                          p.sourceProperty,
+                          current.action,
+                          e.target.value,
+                        )
+                      }
                     >
                       <option value="">(pick a field)</option>
                       {fields.map((f) => (
-                        <option key={f.name} value={f.name}>{f.name} ({f.type})</option>
+                        <option key={f.name} value={f.name}>
+                          {f.name} ({f.type})
+                        </option>
                       ))}
                     </select>
                   )}
@@ -100,15 +140,21 @@ export const ConnectorMapping = ({ connectorId, sourceProperties, twentyFieldsBy
                   {p.aiSuggestion ? (
                     <button
                       type="button"
-                      onClick={() => update(
-                        p.twentyObject, p.sourceProperty,
-                        p.aiSuggestion!.action, p.aiSuggestion!.twentyField,
-                      )}
+                      onClick={() =>
+                        update(
+                          p.twentyObject,
+                          p.sourceProperty,
+                          p.aiSuggestion!.action,
+                          p.aiSuggestion!.twentyField,
+                        )
+                      }
                       title={`Confidence ${(p.aiSuggestion.confidence * 100).toFixed(0)}%`}
                     >
                       ✓ {p.aiSuggestion.action} → {p.aiSuggestion.twentyField}
                     </button>
-                  ) : <span>—</span>}
+                  ) : (
+                    <span>—</span>
+                  )}
                 </td>
               </tr>
             );

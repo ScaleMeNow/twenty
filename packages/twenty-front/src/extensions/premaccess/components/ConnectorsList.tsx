@@ -12,7 +12,7 @@ type Connector = {
   fieldOverrideCount: number;
 };
 
-type Props = {
+type ConnectorsListProps = {
   workspaceId: string;
 };
 
@@ -28,10 +28,13 @@ type Props = {
  * tokens. For this scaffold we keep markup minimal; visual polish lands when
  * the wizard ships.
  */
-export const ConnectorsList = ({ workspaceId }: Props) => {
-  const { data, loading, error } = useQuery<{ connectors: Connector[] }>(CONNECTORS_QUERY, {
-    variables: { workspaceId },
-  });
+export const ConnectorsList = ({ workspaceId }: ConnectorsListProps) => {
+  const { data, loading, error } = useQuery<{ connectors: Connector[] }>(
+    CONNECTORS_QUERY,
+    {
+      variables: { workspaceId },
+    },
+  );
 
   if (loading) return <div>Loading connectors…</div>;
   if (error) return <div>Error loading connectors: {error.message}</div>;
@@ -48,7 +51,13 @@ export const ConnectorsList = ({ workspaceId }: Props) => {
 
   return (
     <div>
-      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+      <header
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+        }}
+      >
         <h2>Connectors</h2>
         <a href="/_premaccess/connectors/new">+ Connect a source</a>
       </header>

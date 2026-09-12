@@ -4,7 +4,7 @@ import { ConnectorsList } from './components/ConnectorsList';
 import { InferredEdgesReview } from './components/InferredEdgesReview';
 import { SyncTrigger } from './components/SyncTrigger';
 
-type Props = {
+type PremaccessRoutesProps = {
   workspaceId: string;
 };
 
@@ -16,9 +16,12 @@ type Props = {
  * existing auth context — the workspaceId comes from Twenty's auth state,
  * not from the URL.
  */
-export const PremaccessRoutes = ({ workspaceId }: Props) => (
+export const PremaccessRoutes = ({ workspaceId }: PremaccessRoutesProps) => (
   <Routes>
-    <Route path="connectors" element={<ConnectorsList workspaceId={workspaceId} />} />
+    <Route
+      path="connectors"
+      element={<ConnectorsList workspaceId={workspaceId} />}
+    />
     <Route
       path="connectors/:id"
       element={
@@ -27,7 +30,10 @@ export const PremaccessRoutes = ({ workspaceId }: Props) => (
         <ConnectorDetailPage workspaceId={workspaceId} />
       }
     />
-    <Route path="inferred-edges" element={<InferredEdgesReview workspaceId={workspaceId} />} />
+    <Route
+      path="inferred-edges"
+      element={<InferredEdgesReview workspaceId={workspaceId} />}
+    />
   </Routes>
 );
 

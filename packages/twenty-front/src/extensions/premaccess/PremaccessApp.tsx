@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { themeCssVariables } from 'twenty-ui/theme-constants';
 
 /**
  * Premaccess — CRM Sync workspace surface.
@@ -80,10 +81,16 @@ const fetchJSON = async <T,>(path: string, init?: RequestInit): Promise<T> => {
   if (token !== null) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(path, { ...init, headers, credentials: 'same-origin' });
+  const res = await fetch(path, {
+    ...init,
+    headers,
+    credentials: 'same-origin',
+  });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`${res.status} ${res.statusText}${body !== '' ? ` — ${body}` : ''}`);
+    throw new Error(
+      `${res.status} ${res.statusText}${body !== '' ? ` — ${body}` : ''}`,
+    );
   }
   return res.json();
 };
@@ -92,7 +99,7 @@ const styles = {
   page: {
     padding: '24px 28px',
     fontFamily: 'Inter, system-ui, sans-serif',
-    color: 'var(--t-font-color-primary, #f3f3f3)',
+    color: themeCssVariables.font.color.primary,
     height: '100%',
     overflowY: 'auto' as const,
     overflowX: 'hidden' as const,
@@ -104,35 +111,48 @@ const styles = {
     margin: '0 auto',
   } as const,
   h1: { fontSize: 22, fontWeight: 600, marginBottom: 4 } as const,
-  subtitle: { color: 'var(--t-font-color-tertiary, #888)', marginTop: 0, fontSize: 13, marginBottom: 16 } as const,
+  subtitle: {
+    color: themeCssVariables.font.color.tertiary,
+    marginTop: 0,
+    fontSize: 13,
+    marginBottom: 16,
+  } as const,
   helpBanner: {
-    background: 'var(--t-background-tertiary, #1f2937)',
-    border: '1px solid var(--t-border-color-light, #2a3441)',
-    borderLeft: '3px solid #60a5fa',
+    background: themeCssVariables.background.tertiary,
+    border: `1px solid ${themeCssVariables.border.color.light}`,
+    borderLeft: `3px solid ${themeCssVariables.color.blue}`,
     borderRadius: 6,
     padding: '12px 14px',
     fontSize: 13,
-    color: 'var(--t-font-color-secondary, #cbd5e1)',
+    color: themeCssVariables.font.color.secondary,
     marginBottom: 18,
     lineHeight: 1.5,
   } as const,
   section: { marginTop: 28 } as const,
-  sectionHeader: { display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 } as const,
+  sectionHeader: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: 10,
+    marginBottom: 10,
+  } as const,
   sectionTitle: { fontSize: 15, fontWeight: 600 } as const,
-  sectionHelp: { fontSize: 12, color: 'var(--t-font-color-tertiary, #888)' } as const,
+  sectionHelp: {
+    fontSize: 12,
+    color: themeCssVariables.font.color.tertiary,
+  } as const,
   table: {
     width: '100%',
     borderCollapse: 'collapse' as const,
     fontSize: 13,
-    background: 'var(--t-background-primary, #1a1a1a)',
-    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
+    background: themeCssVariables.background.primary,
+    border: `1px solid ${themeCssVariables.border.color.medium}`,
     borderRadius: 6,
     overflow: 'hidden' as const,
   },
   thRow: {
-    background: 'var(--t-background-secondary, #222)',
+    background: themeCssVariables.background.secondary,
     textAlign: 'left' as const,
-    color: 'var(--t-font-color-secondary, #aaa)',
+    color: themeCssVariables.font.color.secondary,
   },
   th: {
     padding: '10px 12px',
@@ -142,24 +162,26 @@ const styles = {
     letterSpacing: '0.04em',
     cursor: 'help' as const,
   },
-  tdRow: { borderTop: '1px solid var(--t-border-color-light, #2a2a2a)' } as const,
+  tdRow: {
+    borderTop: `1px solid ${themeCssVariables.border.color.light}`,
+  } as const,
   td: { padding: '10px 12px' } as const,
   btn: {
     padding: '6px 12px',
     fontSize: 12,
     borderRadius: 4,
-    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
-    background: 'var(--t-background-tertiary, #2b2b2b)',
-    color: 'var(--t-font-color-primary, #f3f3f3)',
+    border: `1px solid ${themeCssVariables.border.color.medium}`,
+    background: themeCssVariables.background.tertiary,
+    color: themeCssVariables.font.color.primary,
     cursor: 'pointer' as const,
   },
   btnPrimary: {
     padding: '8px 14px',
     fontSize: 13,
     borderRadius: 4,
-    border: '1px solid #2563eb',
-    background: '#2563eb',
-    color: '#fff',
+    border: `1px solid ${themeCssVariables.color.blue}`,
+    background: themeCssVariables.color.blue,
+    color: themeCssVariables.font.color.inverted,
     cursor: 'pointer' as const,
     fontWeight: 500,
   },
@@ -167,22 +189,22 @@ const styles = {
     padding: '6px 12px',
     fontSize: 12,
     borderRadius: 4,
-    border: '1px solid #b91c1c',
-    background: 'rgba(220,38,38,0.15)',
-    color: '#fca5a5',
+    border: `1px solid ${themeCssVariables.border.color.danger}`,
+    background: themeCssVariables.background.transparent.danger,
+    color: themeCssVariables.font.color.danger,
     cursor: 'pointer' as const,
   },
   card: {
-    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
+    border: `1px solid ${themeCssVariables.border.color.medium}`,
     borderRadius: 6,
     padding: 14,
     marginBottom: 10,
-    background: 'var(--t-background-primary, #1a1a1a)',
+    background: themeCssVariables.background.primary,
   },
   errorBanner: {
-    background: 'rgba(220, 38, 38, 0.12)',
-    border: '1px solid rgba(220, 38, 38, 0.4)',
-    color: '#fca5a5',
+    background: themeCssVariables.background.transparent.danger,
+    border: `1px solid ${themeCssVariables.border.color.danger}`,
+    color: themeCssVariables.font.color.danger,
     padding: 12,
     borderRadius: 6,
     marginBottom: 16,
@@ -190,9 +212,9 @@ const styles = {
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
   },
   okBanner: {
-    background: 'rgba(34,197,94,0.12)',
-    border: '1px solid rgba(34,197,94,0.4)',
-    color: '#86efac',
+    background: themeCssVariables.background.transparent.success,
+    border: `1px solid ${themeCssVariables.color.green}`,
+    color: themeCssVariables.tag.text.green,
     padding: 10,
     borderRadius: 6,
     marginBottom: 12,
@@ -209,65 +231,107 @@ const styles = {
     width: '100%',
     padding: '8px 10px',
     fontSize: 13,
-    background: 'var(--t-background-secondary, #222)',
-    color: 'var(--t-font-color-primary, #f3f3f3)',
-    border: '1px solid var(--t-border-color-medium, #2a2a2a)',
+    background: themeCssVariables.background.secondary,
+    color: themeCssVariables.font.color.primary,
+    border: `1px solid ${themeCssVariables.border.color.medium}`,
     borderRadius: 4,
     fontFamily: 'inherit',
   } as const,
-  label: { fontSize: 12, color: 'var(--t-font-color-secondary, #aaa)', marginBottom: 4, display: 'block' } as const,
-  formGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 12 } as const,
+  label: {
+    fontSize: 12,
+    color: themeCssVariables.font.color.secondary,
+    marginBottom: 4,
+    display: 'block',
+  } as const,
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: 12,
+    marginBottom: 12,
+  } as const,
   formCard: {
-    background: 'var(--t-background-secondary, #1c1c1c)',
-    border: '1px solid var(--t-border-color-light, #2a2a2a)',
+    background: themeCssVariables.background.secondary,
+    border: `1px solid ${themeCssVariables.border.color.light}`,
     borderRadius: 6,
     padding: 16,
     marginBottom: 16,
   } as const,
-  tabs: { display: 'flex', gap: 4, borderBottom: '1px solid var(--t-border-color-medium, #2a2a2a)', marginBottom: 16 } as const,
-  tab: { padding: '8px 16px', fontSize: 13, color: 'var(--t-font-color-tertiary, #888)', cursor: 'pointer' as const, borderBottom: '2px solid transparent' },
-  tabActive: { color: 'var(--t-font-color-primary, #f3f3f3)', borderBottom: '2px solid #2563eb' } as const,
+  tabs: {
+    display: 'flex',
+    gap: 4,
+    borderBottom: `1px solid ${themeCssVariables.border.color.medium}`,
+    marginBottom: 16,
+  } as const,
+  tab: {
+    padding: '8px 16px',
+    fontSize: 13,
+    color: themeCssVariables.font.color.tertiary,
+    cursor: 'pointer' as const,
+    borderBottom: '2px solid transparent',
+  },
+  tabActive: {
+    color: themeCssVariables.font.color.primary,
+    borderBottom: `2px solid ${themeCssVariables.color.blue}`,
+  } as const,
   code: {
-    background: 'var(--t-background-secondary, #0f1419)',
+    background: themeCssVariables.background.secondary,
     padding: '2px 5px',
     borderRadius: 3,
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
     fontSize: 12,
-    color: 'var(--t-font-color-secondary)',
+    color: themeCssVariables.font.color.secondary,
   } as const,
   codeBlock: {
-    background: 'var(--t-background-secondary, #0f1419)',
+    background: themeCssVariables.background.secondary,
     padding: 12,
     borderRadius: 4,
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
     fontSize: 12,
-    color: '#cbd5e1',
+    color: themeCssVariables.font.color.secondary,
     overflow: 'auto' as const,
     whiteSpace: 'pre-wrap' as const,
     marginTop: 8,
-    border: '1px solid var(--t-border-color-light, #2a2a2a)',
+    border: `1px solid ${themeCssVariables.border.color.light}`,
   },
 };
 
 const pillFor = (status: string) => {
   const palette: Record<string, { bg: string; fg: string }> = {
-    active: { bg: 'rgba(34,197,94,0.15)', fg: '#86efac' },
-    pending: { bg: 'rgba(234,179,8,0.18)', fg: '#a16207' },
-    failed: { bg: 'rgba(220,38,38,0.15)', fg: '#fca5a5' },
-    completed: { bg: 'rgba(59,130,246,0.15)', fg: '#93c5fd' },
-    'bulk-import': { bg: 'rgba(168,85,247,0.15)', fg: '#d8b4fe' },
+    active: {
+      bg: themeCssVariables.background.transparent.success,
+      fg: themeCssVariables.tag.text.green,
+    },
+    pending: {
+      bg: themeCssVariables.tag.background.yellow,
+      fg: themeCssVariables.tag.text.yellow,
+    },
+    failed: {
+      bg: themeCssVariables.background.transparent.danger,
+      fg: themeCssVariables.font.color.danger,
+    },
+    completed: {
+      bg: themeCssVariables.background.transparent.blue,
+      fg: themeCssVariables.tag.text.blue,
+    },
+    'bulk-import': {
+      bg: themeCssVariables.tag.background.purple,
+      fg: themeCssVariables.tag.text.purple,
+    },
   };
-  const colors = palette[status] ?? { bg: 'rgba(148,163,184,0.15)', fg: '#cbd5e1' };
+  const colors = palette[status] ?? {
+    bg: themeCssVariables.tag.background.gray,
+    fg: themeCssVariables.font.color.secondary,
+  };
   return { ...styles.pill, background: colors.bg, color: colors.fg };
 };
 
 type TabKey = 'overview' | 'mappings' | 'bulk' | 'inferred' | 'docs';
 
 const STAGES: Array<{ key: string; label: string }> = [
-  { key: 'pending',     label: 'Queued (SQS)' },
+  { key: 'pending', label: 'Queued (SQS)' },
   { key: 'in_progress', label: 'Marked in-progress (Lambda)' },
-  { key: 'build',       label: 'CodeBuild migration' },
-  { key: 'done',        label: 'Marker complete (Lambda)' },
+  { key: 'build', label: 'CodeBuild migration' },
+  { key: 'done', label: 'Marker complete (Lambda)' },
 ];
 
 const PipelineStages = ({ s }: { s: Sync }) => {
@@ -277,7 +341,8 @@ const PipelineStages = ({ s }: { s: Sync }) => {
   const stateFor = (key: string): 'pending' | 'running' | 'done' | 'failed' => {
     if (status === 'failed') {
       if (key === 'pending') return 'done';
-      if (key === 'in_progress') return s.lastMarkerAt !== null ? 'done' : 'failed';
+      if (key === 'in_progress')
+        return s.lastMarkerAt !== null ? 'done' : 'failed';
       if (key === 'build') return hasBuild ? 'failed' : 'pending';
       if (key === 'done') return 'failed';
     }
@@ -296,10 +361,10 @@ const PipelineStages = ({ s }: { s: Sync }) => {
   };
   const dot = (st: ReturnType<typeof stateFor>) => {
     const palette = {
-      pending: 'rgba(148,163,184,0.45)',
-      running: '#fbbf24',
-      done: '#22c55e',
-      failed: '#ef4444',
+      pending: themeCssVariables.background.transparent.medium,
+      running: themeCssVariables.color.yellow,
+      done: themeCssVariables.color.green,
+      failed: themeCssVariables.color.red,
     } as const;
     return (
       <span
@@ -322,10 +387,23 @@ const PipelineStages = ({ s }: { s: Sync }) => {
         return (
           <li key={stg.key} style={{ padding: '3px 0', fontSize: 13 }}>
             {dot(st)}
-            <span style={{ color: st === 'pending' ? 'var(--t-font-color-tertiary)' : 'inherit' }}>
+            <span
+              style={{
+                color:
+                  st === 'pending'
+                    ? themeCssVariables.font.color.tertiary
+                    : 'inherit',
+              }}
+            >
               {stg.label}
             </span>
-            <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--t-font-color-tertiary)' }}>
+            <span
+              style={{
+                marginLeft: 8,
+                fontSize: 11,
+                color: themeCssVariables.font.color.tertiary,
+              }}
+            >
               {st === 'pending' && 'not yet'}
               {st === 'running' && 'running…'}
               {st === 'done' && 'done'}
@@ -382,13 +460,17 @@ export const PremaccessApp = () => {
   const [ok, setOk] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [minConfidence, setMinConfidence] = useState(0.7);
-  const [selectedConnectorId, setSelectedConnectorId] = useState<string | null>(null);
+  const [selectedConnectorId, setSelectedConnectorId] = useState<string | null>(
+    null,
+  );
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     try {
       setErr(null);
       const [c, s, e] = await Promise.all([
-        fetchJSON<Connector[]>(`/_premaccess/connectors?workspaceId=${WORKSPACE_ID}`),
+        fetchJSON<Connector[]>(
+          `/_premaccess/connectors?workspaceId=${WORKSPACE_ID}`,
+        ),
         fetchJSON<Sync[]>(`/_premaccess/syncs?limit=30`),
         fetchJSON<InferredEdge[]>(
           `/_premaccess/inferred-edges?workspaceId=${WORKSPACE_ID}&minConfidence=${minConfidence}`,
@@ -397,15 +479,18 @@ export const PremaccessApp = () => {
       setConnectors(c);
       setSyncs(s);
       setEdges(e);
-      if (selectedConnectorId === null && c.length > 0) setSelectedConnectorId(c[0].id);
+      // Functional update: selecting a connector must not re-run the fetch.
+      setSelectedConnectorId((current) =>
+        current === null && c.length > 0 ? c[0].id : current,
+      );
     } catch (x) {
       setErr((x as Error).message);
     }
-  };
+  }, [minConfidence]);
 
   useEffect(() => {
     void refresh();
-  }, [minConfidence]);
+  }, [refresh]);
 
   const flash = (msg: string) => {
     setOk(msg);
@@ -427,168 +512,186 @@ export const PremaccessApp = () => {
   return (
     <div style={styles.page}>
       <div style={styles.pageInner}>
-      <div style={styles.h1}>Premaccess — CRM Sync Console</div>
-      <div style={styles.subtitle}>
-        Operator console for CRM-Manager autonomy. Workspace {WORKSPACE_ID}.
-      </div>
+        <div style={styles.h1}>Premaccess — CRM Sync Console</div>
+        <div style={styles.subtitle}>
+          Operator console for CRM-Manager autonomy. Workspace {WORKSPACE_ID}.
+        </div>
 
-      <div style={styles.helpBanner}>
-        <strong>How this works:</strong> Each <em>connector</em> is one source CRM (HubSpot, Salesforce…)
-        linked to this Twenty workspace. A <em>sync</em> reads from the source, normalises rows, and
-        loads them into Twenty's tables. The pipeline also detects <em>inferred edges</em> using
-        Bedrock — links between tasks/notes and people/companies that the source CRM didn't have
-        explicitly. You approve or reject those before they touch the workspace.
-        <br />
-        <span style={{ color: 'var(--t-font-color-tertiary, #888)' }}>
-          Need the full reference? Open the Docs tab — quick reference for the
-          happy path, cURL examples, and troubleshooting.
-        </span>
-      </div>
+        <div style={styles.helpBanner}>
+          <strong>How this works:</strong> Each <em>connector</em> is one source
+          CRM (HubSpot, Salesforce…) linked to this Twenty workspace. A{' '}
+          <em>sync</em> reads from the source, normalises rows, and loads them
+          into Twenty's tables. The pipeline also detects{' '}
+          <em>inferred edges</em> using Bedrock — links between tasks/notes and
+          people/companies that the source CRM didn't have explicitly. You
+          approve or reject those before they touch the workspace.
+          <br />
+          <span style={{ color: themeCssVariables.font.color.tertiary }}>
+            Need the full reference? Open the Docs tab — quick reference for the
+            happy path, cURL examples, and troubleshooting.
+          </span>
+        </div>
 
-      {err !== null && <div style={styles.errorBanner}>Error: {err}</div>}
-      {ok !== null && <div style={styles.okBanner}>{ok}</div>}
+        {err !== null && <div style={styles.errorBanner}>Error: {err}</div>}
+        {ok !== null && <div style={styles.okBanner}>{ok}</div>}
 
-      <div style={styles.tabs}>
-        {(
-          [
-            ['overview', '1. Connectors & runs'],
-            ['mappings', '2. Field & assoc. mappings'],
-            ['bulk', '3. Bulk import'],
-            ['inferred', '4. Review inferred edges'],
-            ['docs', 'Docs'],
-          ] as Array<[TabKey, string]>
-        ).map(([k, label]) => (
-          <div
-            key={k}
-            style={{ ...styles.tab, ...(tab === k ? styles.tabActive : {}) }}
-            onClick={() => setTab(k)}
-          >
-            {label}
-          </div>
-        ))}
-      </div>
+        <div style={styles.tabs}>
+          {(
+            [
+              ['overview', '1. Connectors & runs'],
+              ['mappings', '2. Field & assoc. mappings'],
+              ['bulk', '3. Bulk import'],
+              ['inferred', '4. Review inferred edges'],
+              ['docs', 'Docs'],
+            ] as Array<[TabKey, string]>
+          ).map(([k, label]) => (
+            <div
+              key={k}
+              style={{ ...styles.tab, ...(tab === k ? styles.tabActive : {}) }}
+              onClick={() => setTab(k)}
+            >
+              {label}
+            </div>
+          ))}
+        </div>
 
-      {tab === 'overview' && (
-        <OverviewTab
-          connectors={connectors}
-          syncs={syncs}
-          busy={busy}
-          onCreate={(input) => wrap('Connector created', () =>
-            fetchJSON('/_premaccess/connectors', { method: 'POST', body: JSON.stringify(input) }),
-          )}
-          onTrigger={(id, dryRun) =>
-            wrap(`Sync ${dryRun ? 'dry-run' : 'live'} triggered`, () =>
-              fetchJSON(`/_premaccess/connectors/${id}/sync`, {
-                method: 'POST',
-                body: JSON.stringify({ mode: 'DELTA', dryRun }),
-              }),
-            )
-          }
-          onUpdate={(id, patch) =>
-            wrap('Connector updated', () =>
-              fetchJSON(`/_premaccess/connectors/${id}`, {
-                method: 'PATCH',
-                body: JSON.stringify(patch),
-              }),
-            )
-          }
-          onDelete={(id) =>
-            wrap('Connector deleted', () =>
-              fetchJSON(`/_premaccess/connectors/${id}`, { method: 'DELETE' }),
-            )
-          }
-        />
-      )}
-
-      {tab === 'mappings' && (
-        <MappingsTab
-          connectors={connectors}
-          selectedConnectorId={selectedConnectorId}
-          setSelectedConnectorId={setSelectedConnectorId}
-          busy={busy}
-          onFieldMap={(connectorId, body) =>
-            wrap('Field mapping saved', () =>
-              fetchJSON(`/_premaccess/connectors/${connectorId}/field-mapping`, {
-                method: 'POST',
-                body: JSON.stringify(body),
-              }),
-            )
-          }
-          onAssocMap={(connectorId, body) =>
-            wrap('Association mapping saved', () =>
-              fetchJSON(`/_premaccess/connectors/${connectorId}/association-mapping`, {
-                method: 'POST',
-                body: JSON.stringify(body),
-              }),
-            )
-          }
-          onFieldDelete={(connectorId, twentyObject, sourceProperty) =>
-            wrap('Field override removed', () =>
-              fetchJSON(
-                `/_premaccess/connectors/${connectorId}/field-mapping?twentyObject=${encodeURIComponent(twentyObject)}&sourceProperty=${encodeURIComponent(sourceProperty)}`,
-                { method: 'DELETE' },
-              ),
-            )
-          }
-          onAssocDelete={(connectorId, nativePair) =>
-            wrap('Association override removed', () =>
-              fetchJSON(
-                `/_premaccess/connectors/${connectorId}/association-mapping?nativePair=${encodeURIComponent(nativePair)}`,
-                { method: 'DELETE' },
-              ),
-            )
-          }
-        />
-      )}
-
-      {tab === 'bulk' && (
-        <BulkImportTab
-          connectors={connectors}
-          selectedConnectorId={selectedConnectorId}
-          setSelectedConnectorId={setSelectedConnectorId}
-          busy={busy}
-          onSubmit={(connectorId, body) =>
-            wrap(`Bulk import queued`, () =>
-              fetchJSON(`/_premaccess/connectors/${connectorId}/bulk-import`, {
-                method: 'POST',
-                body: JSON.stringify(body),
-              }),
-            )
-          }
-        />
-      )}
-
-      {tab === 'inferred' && (
-        <InferredTab
-          edges={edges}
-          minConfidence={minConfidence}
-          setMinConfidence={setMinConfidence}
-          busy={busy}
-          onPromote={(e) =>
-            wrap('Edge promoted', () =>
-              fetchJSON('/_premaccess/inferred-edges/promote', {
-                method: 'POST',
-                body: JSON.stringify({
-                  runId: e.runId,
-                  semanticType: e.semanticType,
-                  fromTwentyId: e.fromTwentyId,
-                  toTwentyId: e.toTwentyId,
+        {tab === 'overview' && (
+          <OverviewTab
+            connectors={connectors}
+            syncs={syncs}
+            busy={busy}
+            onCreate={(input) =>
+              wrap('Connector created', () =>
+                fetchJSON('/_premaccess/connectors', {
+                  method: 'POST',
+                  body: JSON.stringify(input),
                 }),
-              }),
-            )
-          }
-          onRejectBelow={(runId, conf) =>
-            wrap('Edges rejected', () =>
-              fetchJSON('/_premaccess/inferred-edges/reject-below', {
-                method: 'POST',
-                body: JSON.stringify({ runId, confidence: conf }),
-              }),
-            )
-          }
-        />
-      )}
+              )
+            }
+            onTrigger={(id, dryRun) =>
+              wrap(`Sync ${dryRun ? 'dry-run' : 'live'} triggered`, () =>
+                fetchJSON(`/_premaccess/connectors/${id}/sync`, {
+                  method: 'POST',
+                  body: JSON.stringify({ mode: 'DELTA', dryRun }),
+                }),
+              )
+            }
+            onUpdate={(id, patch) =>
+              wrap('Connector updated', () =>
+                fetchJSON(`/_premaccess/connectors/${id}`, {
+                  method: 'PATCH',
+                  body: JSON.stringify(patch),
+                }),
+              )
+            }
+            onDelete={(id) =>
+              wrap('Connector deleted', () =>
+                fetchJSON(`/_premaccess/connectors/${id}`, {
+                  method: 'DELETE',
+                }),
+              )
+            }
+          />
+        )}
 
-      {tab === 'docs' && <DocsTab />}
+        {tab === 'mappings' && (
+          <MappingsTab
+            connectors={connectors}
+            selectedConnectorId={selectedConnectorId}
+            setSelectedConnectorId={setSelectedConnectorId}
+            busy={busy}
+            onFieldMap={(connectorId, body) =>
+              wrap('Field mapping saved', () =>
+                fetchJSON(
+                  `/_premaccess/connectors/${connectorId}/field-mapping`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                  },
+                ),
+              )
+            }
+            onAssocMap={(connectorId, body) =>
+              wrap('Association mapping saved', () =>
+                fetchJSON(
+                  `/_premaccess/connectors/${connectorId}/association-mapping`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                  },
+                ),
+              )
+            }
+            onFieldDelete={(connectorId, twentyObject, sourceProperty) =>
+              wrap('Field override removed', () =>
+                fetchJSON(
+                  `/_premaccess/connectors/${connectorId}/field-mapping?twentyObject=${encodeURIComponent(twentyObject)}&sourceProperty=${encodeURIComponent(sourceProperty)}`,
+                  { method: 'DELETE' },
+                ),
+              )
+            }
+            onAssocDelete={(connectorId, nativePair) =>
+              wrap('Association override removed', () =>
+                fetchJSON(
+                  `/_premaccess/connectors/${connectorId}/association-mapping?nativePair=${encodeURIComponent(nativePair)}`,
+                  { method: 'DELETE' },
+                ),
+              )
+            }
+          />
+        )}
+
+        {tab === 'bulk' && (
+          <BulkImportTab
+            connectors={connectors}
+            selectedConnectorId={selectedConnectorId}
+            setSelectedConnectorId={setSelectedConnectorId}
+            busy={busy}
+            onSubmit={(connectorId, body) =>
+              wrap(`Bulk import queued`, () =>
+                fetchJSON(
+                  `/_premaccess/connectors/${connectorId}/bulk-import`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                  },
+                ),
+              )
+            }
+          />
+        )}
+
+        {tab === 'inferred' && (
+          <InferredTab
+            edges={edges}
+            minConfidence={minConfidence}
+            setMinConfidence={setMinConfidence}
+            busy={busy}
+            onPromote={(e) =>
+              wrap('Edge promoted', () =>
+                fetchJSON('/_premaccess/inferred-edges/promote', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    runId: e.runId,
+                    semanticType: e.semanticType,
+                    fromTwentyId: e.fromTwentyId,
+                    toTwentyId: e.toTwentyId,
+                  }),
+                }),
+              )
+            }
+            onRejectBelow={(runId, conf) =>
+              wrap('Edges rejected', () =>
+                fetchJSON('/_premaccess/inferred-edges/reject-below', {
+                  method: 'POST',
+                  body: JSON.stringify({ runId, confidence: conf }),
+                }),
+              )
+            }
+          />
+        )}
+
+        {tab === 'docs' && <DocsTab />}
       </div>
     </div>
   );
@@ -606,9 +709,16 @@ const OverviewTab = ({
   connectors: Connector[];
   syncs: Sync[];
   busy: boolean;
-  onCreate: (input: { source: string; displayName: string; workspaceId: string }) => Promise<void>;
+  onCreate: (input: {
+    source: string;
+    displayName: string;
+    workspaceId: string;
+  }) => Promise<void>;
   onTrigger: (id: string, dryRun: boolean) => Promise<void>;
-  onUpdate: (id: string, patch: { displayName?: string; status?: string }) => Promise<void>;
+  onUpdate: (
+    id: string,
+    patch: { displayName?: string; status?: string },
+  ) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) => {
   const [source, setSource] = useState('hubspot');
@@ -632,9 +742,14 @@ const OverviewTab = ({
         <div style={{ ...styles.formGrid, marginTop: 12 }}>
           <div>
             <label style={styles.label}>
-              Source <InfoIcon tip="Source CRM type. Pick the system you're pulling data from." />
+              Source{' '}
+              <InfoIcon tip="Source CRM type. Pick the system you're pulling data from." />
             </label>
-            <select style={styles.input} value={source} onChange={(e) => setSource(e.target.value)}>
+            <select
+              style={styles.input}
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+            >
               <option value="hubspot">hubspot</option>
               <option value="salesforce" disabled>
                 salesforce (coming soon)
@@ -646,7 +761,8 @@ const OverviewTab = ({
           </div>
           <div>
             <label style={styles.label}>
-              Display name <InfoIcon tip="Free-text name shown in the connectors list. Pick something colleagues will recognise (e.g. 'HubSpot Prod', 'HubSpot Sandbox')." />
+              Display name{' '}
+              <InfoIcon tip="Free-text name shown in the connectors list. Pick something colleagues will recognise (e.g. 'HubSpot Prod', 'HubSpot Sandbox')." />
             </label>
             <input
               style={styles.input}
@@ -659,7 +775,13 @@ const OverviewTab = ({
         <button
           style={styles.btnPrimary}
           disabled={busy || displayName.trim() === ''}
-          onClick={() => onCreate({ source, displayName: displayName.trim(), workspaceId: WORKSPACE_ID })}
+          onClick={() =>
+            onCreate({
+              source,
+              displayName: displayName.trim(),
+              workspaceId: WORKSPACE_ID,
+            })
+          }
         >
           Create connector
         </button>
@@ -668,13 +790,17 @@ const OverviewTab = ({
       <section style={styles.section}>
         <div style={styles.sectionHeader}>
           <div style={styles.sectionTitle}>Connectors</div>
-          <div style={styles.sectionHelp}>One row per source CRM linked to this workspace.</div>
+          <div style={styles.sectionHelp}>
+            One row per source CRM linked to this workspace.
+          </div>
         </div>
         <table style={styles.table}>
           <thead>
             <tr style={styles.thRow}>
               <Th tip="Connector kind (hubspot, salesforce, …)">Source</Th>
-              <Th tip="Display name you set when creating the connector">Name</Th>
+              <Th tip="Display name you set when creating the connector">
+                Name
+              </Th>
               <Th tip="active = healthy. failed = last sync errored. Hover the last-sync cell for the run status.">
                 Status
               </Th>
@@ -728,11 +854,15 @@ const OverviewTab = ({
                   </td>
                   <td style={styles.td}>{c.fieldOverrideCount}</td>
                   <td style={styles.td}>
-                    {c.lastSyncAt === null ? '—' : new Date(c.lastSyncAt).toLocaleString()}
+                    {c.lastSyncAt === null
+                      ? '—'
+                      : new Date(c.lastSyncAt).toLocaleString()}
                     {c.lastSyncStatus !== null && (
                       <>
                         {' '}
-                        <span style={pillFor(c.lastSyncStatus)}>{c.lastSyncStatus}</span>
+                        <span style={pillFor(c.lastSyncStatus)}>
+                          {c.lastSyncStatus}
+                        </span>
                       </>
                     )}
                   </td>
@@ -743,7 +873,10 @@ const OverviewTab = ({
                           style={{ ...styles.btnPrimary, marginRight: 6 }}
                           disabled={busy}
                           onClick={async () => {
-                            await onUpdate(c.id, { displayName: editName.trim(), status: editStatus });
+                            await onUpdate(c.id, {
+                              displayName: editName.trim(),
+                              status: editStatus,
+                            });
                             setEditingId(null);
                           }}
                         >
@@ -782,7 +915,11 @@ const OverviewTab = ({
                         <button
                           style={{ ...styles.btnPrimary, marginRight: 6 }}
                           onClick={() => {
-                            if (window.confirm('Live sync will WRITE to the workspace tables. Continue?')) {
+                            if (
+                              window.confirm(
+                                'Live sync will WRITE to the workspace tables. Continue?',
+                              )
+                            ) {
                               void onTrigger(c.id, false);
                             }
                           }}
@@ -821,8 +958,8 @@ const OverviewTab = ({
         <div style={styles.sectionHeader}>
           <div style={styles.sectionTitle}>Recent runs</div>
           <div style={styles.sectionHelp}>
-            Last 30 runs across all connectors. Use this to confirm a sync landed and to see how
-            much data it moved.
+            Last 30 runs across all connectors. Use this to confirm a sync
+            landed and to see how much data it moved.
           </div>
         </div>
         <table style={styles.table}>
@@ -853,7 +990,8 @@ const OverviewTab = ({
               </tr>
             )}
             {syncs.map((s) => {
-              const triggeredBy = s.triggeredByName ?? s.triggeredByEmail ?? '—';
+              const triggeredBy =
+                s.triggeredByName ?? s.triggeredByEmail ?? '—';
               const modeLabel =
                 s.mode === null
                   ? '—'
@@ -872,7 +1010,9 @@ const OverviewTab = ({
                     title={`Click to ${isOpen ? 'collapse' : 'inspect'} run ${s.id}`}
                   >
                     <td style={styles.td}>
-                      <span style={{ opacity: 0.5, marginRight: 6 }}>{isOpen ? '▾' : '▸'}</span>
+                      <span style={{ opacity: 0.5, marginRight: 6 }}>
+                        {isOpen ? '▾' : '▸'}
+                      </span>
                       {new Date(s.startedAt).toLocaleString()}
                     </td>
                     <td style={styles.td} title={s.triggeredByEmail ?? ''}>
@@ -888,22 +1028,68 @@ const OverviewTab = ({
                   {isOpen && (
                     <tr key={`${s.id}-detail`} style={styles.tdRow}>
                       <td style={{ ...styles.td, padding: 18 }} colSpan={6}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '6px 12px', fontSize: 13 }}>
-                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Run ID</div>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '160px 1fr',
+                            gap: '6px 12px',
+                            fontSize: 13,
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: themeCssVariables.font.color.tertiary,
+                            }}
+                          >
+                            Run ID
+                          </div>
                           <div>
                             <code style={styles.code}>{s.id}</code>
                           </div>
-                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Started</div>
+                          <div
+                            style={{
+                              color: themeCssVariables.font.color.tertiary,
+                            }}
+                          >
+                            Started
+                          </div>
                           <div>{new Date(s.startedAt).toLocaleString()}</div>
-                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Completed</div>
-                          <div>{s.completedAt === null ? '—' : new Date(s.completedAt).toLocaleString()}</div>
-                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Last orchestrator event</div>
-                          <div>{s.lastMarkerAt === null ? '—' : new Date(s.lastMarkerAt).toLocaleString()}</div>
-                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>CodeBuild build ID</div>
+                          <div
+                            style={{
+                              color: themeCssVariables.font.color.tertiary,
+                            }}
+                          >
+                            Completed
+                          </div>
+                          <div>
+                            {s.completedAt === null
+                              ? '—'
+                              : new Date(s.completedAt).toLocaleString()}
+                          </div>
+                          <div
+                            style={{
+                              color: themeCssVariables.font.color.tertiary,
+                            }}
+                          >
+                            Last orchestrator event
+                          </div>
+                          <div>
+                            {s.lastMarkerAt === null
+                              ? '—'
+                              : new Date(s.lastMarkerAt).toLocaleString()}
+                          </div>
+                          <div
+                            style={{
+                              color: themeCssVariables.font.color.tertiary,
+                            }}
+                          >
+                            CodeBuild build ID
+                          </div>
                           <div>
                             {s.buildId === null ? (
                               <span style={{ opacity: 0.5 }}>
-                                not started — the orchestrator has not reached the build step yet
+                                not started — the orchestrator has not reached
+                                the build step yet
                               </span>
                             ) : (
                               <>
@@ -915,7 +1101,9 @@ const OverviewTab = ({
                                       href={buildConsoleUrl}
                                       target="_blank"
                                       rel="noreferrer"
-                                      style={{ color: '#60a5fa' }}
+                                      style={{
+                                        color: themeCssVariables.color.blue,
+                                      }}
                                     >
                                       open in AWS console ↗
                                     </a>
@@ -924,14 +1112,34 @@ const OverviewTab = ({
                               </>
                             )}
                           </div>
-                          <div style={{ color: 'var(--t-font-color-tertiary)' }}>Pipeline stages</div>
+                          <div
+                            style={{
+                              color: themeCssVariables.font.color.tertiary,
+                            }}
+                          >
+                            Pipeline stages
+                          </div>
                           <div>
                             <PipelineStages s={s} />
                           </div>
                           {s.errorMessage !== null && (
                             <>
-                              <div style={{ color: 'var(--t-font-color-tertiary)' }}>Error</div>
-                              <pre style={{ ...styles.codeBlock, marginTop: 0, maxHeight: 220 }}>{s.errorMessage}</pre>
+                              <div
+                                style={{
+                                  color: themeCssVariables.font.color.tertiary,
+                                }}
+                              >
+                                Error
+                              </div>
+                              <pre
+                                style={{
+                                  ...styles.codeBlock,
+                                  marginTop: 0,
+                                  maxHeight: 220,
+                                }}
+                              >
+                                {s.errorMessage}
+                              </pre>
                             </>
                           )}
                         </div>
@@ -948,8 +1156,18 @@ const OverviewTab = ({
   );
 };
 
-type FieldOverride = { twentyObject: string; sourceProperty: string; action: string; twentyField: string | null; updatedAt: string };
-type AssocOverride = { nativePair: string; semanticName: string | null; updatedAt: string };
+type FieldOverride = {
+  twentyObject: string;
+  sourceProperty: string;
+  action: string;
+  twentyField: string | null;
+  updatedAt: string;
+};
+type AssocOverride = {
+  nativePair: string;
+  semanticName: string | null;
+  updatedAt: string;
+};
 
 const MappingsTab = ({
   connectors,
@@ -967,10 +1185,22 @@ const MappingsTab = ({
   busy: boolean;
   onFieldMap: (
     connectorId: string,
-    body: { twentyObject: string; sourceProperty: string; action: string; twentyField?: string },
+    body: {
+      twentyObject: string;
+      sourceProperty: string;
+      action: string;
+      twentyField?: string;
+    },
   ) => Promise<void>;
-  onAssocMap: (connectorId: string, body: { nativePair: string; semanticName?: string }) => Promise<void>;
-  onFieldDelete: (connectorId: string, twentyObject: string, sourceProperty: string) => Promise<void>;
+  onAssocMap: (
+    connectorId: string,
+    body: { nativePair: string; semanticName?: string },
+  ) => Promise<void>;
+  onFieldDelete: (
+    connectorId: string,
+    twentyObject: string,
+    sourceProperty: string,
+  ) => Promise<void>;
   onAssocDelete: (connectorId: string, nativePair: string) => Promise<void>;
 }) => {
   const [twentyObject, setTwentyObject] = useState('company');
@@ -993,8 +1223,12 @@ const MappingsTab = ({
     (async () => {
       try {
         const [f, a] = await Promise.all([
-          fetchJSON<FieldOverride[]>(`/_premaccess/connectors/${selectedConnectorId}/field-mappings`),
-          fetchJSON<AssocOverride[]>(`/_premaccess/connectors/${selectedConnectorId}/association-mappings`),
+          fetchJSON<FieldOverride[]>(
+            `/_premaccess/connectors/${selectedConnectorId}/field-mappings`,
+          ),
+          fetchJSON<AssocOverride[]>(
+            `/_premaccess/connectors/${selectedConnectorId}/association-mappings`,
+          ),
         ]);
         setFieldOverrides(f);
         setAssocOverrides(a);
@@ -1007,7 +1241,8 @@ const MappingsTab = ({
   if (connectors.length === 0)
     return (
       <div style={styles.helpBanner}>
-        No connectors yet. Create one in <strong>1. Connectors & runs</strong> first.
+        No connectors yet. Create one in <strong>1. Connectors & runs</strong>{' '}
+        first.
       </div>
     );
 
@@ -1015,7 +1250,9 @@ const MappingsTab = ({
     <>
       <div style={styles.formCard}>
         <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>Connector</div>
-        <div style={styles.sectionHelp}>Mappings apply per connector — pick which one to edit.</div>
+        <div style={styles.sectionHelp}>
+          Mappings apply per connector — pick which one to edit.
+        </div>
         <select
           style={{ ...styles.input, marginTop: 8, maxWidth: 360 }}
           value={selectedConnectorId ?? ''}
@@ -1033,8 +1270,8 @@ const MappingsTab = ({
         <div style={styles.sectionHeader}>
           <div style={styles.sectionTitle}>Current field overrides</div>
           <div style={styles.sectionHelp}>
-            {fieldOverrides.length} override(s) on this connector. Anything not listed here
-            uses the connector's default mapping.
+            {fieldOverrides.length} override(s) on this connector. Anything not
+            listed here uses the connector's default mapping.
           </div>
         </div>
         <table style={styles.table}>
@@ -1043,7 +1280,9 @@ const MappingsTab = ({
               <Th tip="Twenty target table.">Twenty object</Th>
               <Th tip="Source CRM property name.">Source property</Th>
               <Th tip="alias / custom / ignore.">Action</Th>
-              <Th tip="Target field name on Twenty (only for alias / custom).">Twenty field</Th>
+              <Th tip="Target field name on Twenty (only for alias / custom).">
+                Twenty field
+              </Th>
               <Th tip="Last write time.">Updated</Th>
               <th style={styles.th}></th>
             </tr>
@@ -1063,14 +1302,28 @@ const MappingsTab = ({
                   <code style={styles.code}>{o.sourceProperty}</code>
                 </td>
                 <td style={styles.td}>
-                  <span style={pillFor(o.action === 'ignore' ? 'failed' : o.action === 'alias' ? 'active' : 'completed')}>
+                  <span
+                    style={pillFor(
+                      o.action === 'ignore'
+                        ? 'failed'
+                        : o.action === 'alias'
+                          ? 'active'
+                          : 'completed',
+                    )}
+                  >
                     {o.action}
                   </span>
                 </td>
                 <td style={styles.td}>
-                  {o.twentyField === null ? <span style={{ opacity: 0.5 }}>—</span> : <code style={styles.code}>{o.twentyField}</code>}
+                  {o.twentyField === null ? (
+                    <span style={{ opacity: 0.5 }}>—</span>
+                  ) : (
+                    <code style={styles.code}>{o.twentyField}</code>
+                  )}
                 </td>
-                <td style={styles.td}>{new Date(o.updatedAt).toLocaleString()}</td>
+                <td style={styles.td}>
+                  {new Date(o.updatedAt).toLocaleString()}
+                </td>
                 <td style={styles.td}>
                   <button
                     style={styles.btnDanger}
@@ -1078,9 +1331,15 @@ const MappingsTab = ({
                     onClick={() => {
                       if (
                         selectedConnectorId !== null &&
-                        window.confirm(`Remove field override ${o.twentyObject}.${o.sourceProperty}?`)
+                        window.confirm(
+                          `Remove field override ${o.twentyObject}.${o.sourceProperty}?`,
+                        )
                       ) {
-                        void onFieldDelete(selectedConnectorId, o.twentyObject, o.sourceProperty);
+                        void onFieldDelete(
+                          selectedConnectorId,
+                          o.twentyObject,
+                          o.sourceProperty,
+                        );
                       }
                     }}
                   >
@@ -1097,7 +1356,8 @@ const MappingsTab = ({
         <div style={styles.sectionHeader}>
           <div style={styles.sectionTitle}>Current association overrides</div>
           <div style={styles.sectionHelp}>
-            {assocOverrides.length} override(s). Sets the canonical semantic for native pairs.
+            {assocOverrides.length} override(s). Sets the canonical semantic for
+            native pairs.
           </div>
         </div>
         <table style={styles.table}>
@@ -1123,9 +1383,15 @@ const MappingsTab = ({
                   <code style={styles.code}>{o.nativePair}</code>
                 </td>
                 <td style={styles.td}>
-                  {o.semanticName === null ? <span style={{ opacity: 0.5 }}>—</span> : <code style={styles.code}>{o.semanticName}</code>}
+                  {o.semanticName === null ? (
+                    <span style={{ opacity: 0.5 }}>—</span>
+                  ) : (
+                    <code style={styles.code}>{o.semanticName}</code>
+                  )}
                 </td>
-                <td style={styles.td}>{new Date(o.updatedAt).toLocaleString()}</td>
+                <td style={styles.td}>
+                  {new Date(o.updatedAt).toLocaleString()}
+                </td>
                 <td style={styles.td}>
                   <button
                     style={styles.btnDanger}
@@ -1133,7 +1399,9 @@ const MappingsTab = ({
                     onClick={() => {
                       if (
                         selectedConnectorId !== null &&
-                        window.confirm(`Remove association override ${o.nativePair}?`)
+                        window.confirm(
+                          `Remove association override ${o.nativePair}?`,
+                        )
                       ) {
                         void onAssocDelete(selectedConnectorId, o.nativePair);
                       }
@@ -1149,7 +1417,9 @@ const MappingsTab = ({
       </section>
 
       <div style={styles.formCard}>
-        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>Field mapping override</div>
+        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
+          Field mapping override
+        </div>
         <div style={styles.sectionHelp}>
           Decide what happens to a source property at load time. Each connector
           ships with sensible defaults — overrides set here apply only to this
@@ -1158,9 +1428,14 @@ const MappingsTab = ({
         <div style={styles.formGrid}>
           <div>
             <label style={styles.label}>
-              Twenty object <InfoIcon tip="Which Twenty table the source property lands on: company, person, opportunity, task, note." />
+              Twenty object{' '}
+              <InfoIcon tip="Which Twenty table the source property lands on: company, person, opportunity, task, note." />
             </label>
-            <select style={styles.input} value={twentyObject} onChange={(e) => setTwentyObject(e.target.value)}>
+            <select
+              style={styles.input}
+              value={twentyObject}
+              onChange={(e) => setTwentyObject(e.target.value)}
+            >
               <option>company</option>
               <option>person</option>
               <option>opportunity</option>
@@ -1170,7 +1445,8 @@ const MappingsTab = ({
           </div>
           <div>
             <label style={styles.label}>
-              Source property <InfoIcon tip="The source CRM property name exactly as it appears in the source (e.g. 'hs_lead_status' on HubSpot)." />
+              Source property{' '}
+              <InfoIcon tip="The source CRM property name exactly as it appears in the source (e.g. 'hs_lead_status' on HubSpot)." />
             </label>
             <input
               style={styles.input}
@@ -1181,9 +1457,14 @@ const MappingsTab = ({
           </div>
           <div>
             <label style={styles.label}>
-              Action <InfoIcon tip="alias = map to an existing Twenty field. custom = create a new custom field in Twenty. ignore = drop the property on load." />
+              Action{' '}
+              <InfoIcon tip="alias = map to an existing Twenty field. custom = create a new custom field in Twenty. ignore = drop the property on load." />
             </label>
-            <select style={styles.input} value={action} onChange={(e) => setAction(e.target.value)}>
+            <select
+              style={styles.input}
+              value={action}
+              onChange={(e) => setAction(e.target.value)}
+            >
               <option value="alias">alias → existing field</option>
               <option value="custom">custom → new field</option>
               <option value="ignore">ignore → drop</option>
@@ -1209,14 +1490,17 @@ const MappingsTab = ({
         </div>
         <button
           style={styles.btnPrimary}
-          disabled={busy || selectedConnectorId === null || sourceProperty.trim() === ''}
+          disabled={
+            busy || selectedConnectorId === null || sourceProperty.trim() === ''
+          }
           onClick={() =>
             selectedConnectorId !== null &&
             onFieldMap(selectedConnectorId, {
               twentyObject,
               sourceProperty: sourceProperty.trim(),
               action,
-              twentyField: twentyField.trim() === '' ? undefined : twentyField.trim(),
+              twentyField:
+                twentyField.trim() === '' ? undefined : twentyField.trim(),
             })
           }
         >
@@ -1225,9 +1509,12 @@ const MappingsTab = ({
       </div>
 
       <div style={styles.formCard}>
-        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>Association mapping override</div>
+        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
+          Association mapping override
+        </div>
         <div style={styles.sectionHelp}>
-          Tells the connector what semantic association a native pair represents. Example: HubSpot's{' '}
+          Tells the connector what semantic association a native pair
+          represents. Example: HubSpot's{' '}
           <code style={styles.code}>company:contact</code> pair is universally{' '}
           <code style={styles.code}>employs</code> in Twenty's semantic graph.
         </div>
@@ -1259,12 +1546,15 @@ const MappingsTab = ({
         </div>
         <button
           style={styles.btnPrimary}
-          disabled={busy || selectedConnectorId === null || nativePair.trim() === ''}
+          disabled={
+            busy || selectedConnectorId === null || nativePair.trim() === ''
+          }
           onClick={() =>
             selectedConnectorId !== null &&
             onAssocMap(selectedConnectorId, {
               nativePair: nativePair.trim(),
-              semanticName: semanticName.trim() === '' ? undefined : semanticName.trim(),
+              semanticName:
+                semanticName.trim() === '' ? undefined : semanticName.trim(),
             })
           }
         >
@@ -1315,15 +1605,20 @@ const BulkImportTab = ({
   return (
     <>
       <div style={styles.formCard}>
-        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>Bulk import rows</div>
+        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
+          Bulk import rows
+        </div>
         <div style={styles.sectionHelp}>
-          One-shot import for ad-hoc data (CSV uploads, manual lists, paper-form transcription).
-          Rows are queued into <code style={styles.code}>migration_staging.normalized_rows</code> under
-          a fresh run, ready for the loader to push into Twenty.
+          One-shot import for ad-hoc data (CSV uploads, manual lists, paper-form
+          transcription). Rows are queued into{' '}
+          <code style={styles.code}>migration_staging.normalized_rows</code>{' '}
+          under a fresh run, ready for the loader to push into Twenty.
           <br />
-          Required per row: <code style={styles.code}>natural_key</code> (any stable string — domain,
-          email, internal ID). Optional: <code style={styles.code}>external_id</code> (defaults to
-          natural_key). Everything else is stored in the raw JSON and used by the connector's normaliser.
+          Required per row: <code style={styles.code}>natural_key</code> (any
+          stable string — domain, email, internal ID). Optional:{' '}
+          <code style={styles.code}>external_id</code> (defaults to
+          natural_key). Everything else is stored in the raw JSON and used by
+          the connector's normaliser.
         </div>
         <div style={styles.formGrid}>
           <div>
@@ -1342,7 +1637,11 @@ const BulkImportTab = ({
           </div>
           <div>
             <label style={styles.label}>Twenty object</label>
-            <select style={styles.input} value={twentyObject} onChange={(e) => setTwentyObject(e.target.value)}>
+            <select
+              style={styles.input}
+              value={twentyObject}
+              onChange={(e) => setTwentyObject(e.target.value)}
+            >
               <option>company</option>
               <option>person</option>
               <option>opportunity</option>
@@ -1354,7 +1653,11 @@ const BulkImportTab = ({
         <label style={styles.label}>Rows (JSON array)</label>
         <textarea
           ref={sampleRef}
-          style={{ ...styles.input, minHeight: 200, fontFamily: 'ui-monospace, Menlo, monospace' }}
+          style={{
+            ...styles.input,
+            minHeight: 200,
+            fontFamily: 'ui-monospace, Menlo, monospace',
+          }}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -1373,7 +1676,8 @@ const BulkImportTab = ({
               let rows: Array<Record<string, unknown>>;
               try {
                 rows = JSON.parse(text);
-                if (!Array.isArray(rows)) throw new Error('Top-level must be a JSON array.');
+                if (!Array.isArray(rows))
+                  throw new Error('Top-level must be a JSON array.');
               } catch (e) {
                 alert(`Invalid JSON: ${(e as Error).message}`);
                 return;
@@ -1418,19 +1722,29 @@ const InferredTab = ({
   return (
     <>
       <div style={styles.helpBanner}>
-        <strong>Inferred edges</strong> are links Bedrock (Claude Sonnet 4.6) detected between
-        rows the source CRM did not connect explicitly — for example, a task whose title mentions a
-        person's name. Each edge carries an evidence string and a confidence score. Promote the ones
-        you trust; bulk-reject the rest under a threshold.
+        <strong>Inferred edges</strong> are links Bedrock (Claude Sonnet 4.6)
+        detected between rows the source CRM did not connect explicitly — for
+        example, a task whose title mentions a person's name. Each edge carries
+        an evidence string and a confidence score. Promote the ones you trust;
+        bulk-reject the rest under a threshold.
         <br />
-        <span style={{ color: 'var(--t-font-color-tertiary, #888)' }}>
-          Threshold ≥ 0.9 is usually safe to auto-promote in batch. Below 0.7 is noisy — start there
-          and walk up.
+        <span style={{ color: themeCssVariables.font.color.tertiary }}>
+          Threshold ≥ 0.9 is usually safe to auto-promote in batch. Below 0.7 is
+          noisy — start there and walk up.
         </span>
       </div>
 
-      <div style={{ ...styles.formCard, display: 'flex', alignItems: 'center', gap: 14 }}>
-        <label style={{ ...styles.label, margin: 0 }}>Minimum confidence:</label>
+      <div
+        style={{
+          ...styles.formCard,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+        }}
+      >
+        <label style={{ ...styles.label, margin: 0 }}>
+          Minimum confidence:
+        </label>
         <input
           type="range"
           min={0.5}
@@ -1457,7 +1771,8 @@ const InferredTab = ({
             }}
           >
             <div style={{ fontSize: 13 }}>
-              Run <code style={styles.code}>{runId.slice(0, 8)}…</code> · {runEdges.length} edge(s)
+              Run <code style={styles.code}>{runId.slice(0, 8)}…</code> ·{' '}
+              {runEdges.length} edge(s)
             </div>
             <button
               style={styles.btnDanger}
@@ -1482,20 +1797,36 @@ const InferredTab = ({
             <div
               key={i}
               style={{
-                borderTop: i === 0 ? 'none' : '1px solid var(--t-border-color-light, #2a2a2a)',
+                borderTop:
+                  i === 0
+                    ? 'none'
+                    : `1px solid ${themeCssVariables.border.color.light}`,
                 paddingTop: i === 0 ? 0 : 10,
                 paddingBottom: 10,
               }}
             >
               <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
                 {e.semanticType} · {e.fromObject} → {e.toObject}{' '}
-                <span style={pillFor('completed')}>{e.confidence.toFixed(2)}</span>
+                <span style={pillFor('completed')}>
+                  {e.confidence.toFixed(2)}
+                </span>
               </div>
-              <div style={{ color: 'var(--t-font-color-secondary, #aaa)', fontSize: 13 }}>
+              <div
+                style={{
+                  color: themeCssVariables.font.color.secondary,
+                  fontSize: 13,
+                }}
+              >
                 {e.evidence}
               </div>
               {e.parentTitle !== null && (
-                <div style={{ color: 'var(--t-font-color-tertiary, #888)', fontSize: 12, marginTop: 4 }}>
+                <div
+                  style={{
+                    color: themeCssVariables.font.color.tertiary,
+                    fontSize: 12,
+                    marginTop: 4,
+                  }}
+                >
                   &ldquo;{e.parentTitle}&rdquo;
                 </div>
               )}
@@ -1513,7 +1844,9 @@ const InferredTab = ({
       ))}
 
       {edges.length === 0 && (
-        <div style={{ color: 'var(--t-font-color-tertiary, #888)', fontSize: 13 }}>
+        <div
+          style={{ color: themeCssVariables.font.color.tertiary, fontSize: 13 }}
+        >
           No pending inferred edges at confidence ≥ {minConfidence.toFixed(2)}.
         </div>
       )}
@@ -1523,14 +1856,25 @@ const InferredTab = ({
 
 const DocsTab = () => (
   <div style={styles.card}>
-    <div style={{ ...styles.sectionTitle, marginBottom: 12 }}>Docs · quick reference</div>
+    <div style={{ ...styles.sectionTitle, marginBottom: 12 }}>
+      Docs · quick reference
+    </div>
 
     <details open style={{ marginBottom: 10 }}>
-      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Concepts in 30 seconds</summary>
-      <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
+        Concepts in 30 seconds
+      </summary>
+      <ul
+        style={{
+          fontSize: 13,
+          lineHeight: 1.7,
+          color: themeCssVariables.font.color.secondary,
+        }}
+      >
         <li>
-          <strong>Connector</strong> — one source CRM (HubSpot, Salesforce…) linked
-          to this Twenty workspace. Each gets its own credentials and mappings.
+          <strong>Connector</strong> — one source CRM (HubSpot, Salesforce…)
+          linked to this Twenty workspace. Each gets its own credentials and
+          mappings.
         </li>
         <li>
           <strong>Sync run</strong> — a single extract → normalize → load cycle.
@@ -1545,19 +1889,44 @@ const DocsTab = () => (
     </details>
 
     <details style={{ marginBottom: 10 }}>
-      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>End-to-end happy path</summary>
-      <ol style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
+        End-to-end happy path
+      </summary>
+      <ol
+        style={{
+          fontSize: 13,
+          lineHeight: 1.7,
+          color: themeCssVariables.font.color.secondary,
+        }}
+      >
         <li>Create a connector (Tab 1 → "Connect a new source CRM").</li>
-        <li>Optionally override field/association mappings (Tab 2). Skip if defaults are fine.</li>
-        <li>Trigger a <strong>dry-run sync</strong> first — never a live one until you've seen the row count.</li>
-        <li>Watch the run row appear in "Recent runs". Wait for status → completed.</li>
-        <li>Switch to Tab 4 and review inferred edges. Promote the obvious ones, reject the rest below a threshold.</li>
-        <li>When happy, trigger a <strong>live sync</strong> on the same connector. Same diff, but commits.</li>
+        <li>
+          Optionally override field/association mappings (Tab 2). Skip if
+          defaults are fine.
+        </li>
+        <li>
+          Trigger a <strong>dry-run sync</strong> first — never a live one until
+          you've seen the row count.
+        </li>
+        <li>
+          Watch the run row appear in "Recent runs". Wait for status →
+          completed.
+        </li>
+        <li>
+          Switch to Tab 4 and review inferred edges. Promote the obvious ones,
+          reject the rest below a threshold.
+        </li>
+        <li>
+          When happy, trigger a <strong>live sync</strong> on the same
+          connector. Same diff, but commits.
+        </li>
       </ol>
     </details>
 
     <details style={{ marginBottom: 10 }}>
-      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>cURL reference (power users)</summary>
+      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
+        cURL reference (power users)
+      </summary>
       <pre style={styles.codeBlock}>{`# List connectors
 curl -H "Authorization: Bearer $TOKEN" \\
   https://dev.dojo.bamrun.com/_premaccess/connectors?workspaceId=$WS
@@ -1582,16 +1951,24 @@ curl -H "Authorization: Bearer $TOKEN" \\
     </details>
 
     <details style={{ marginBottom: 10 }}>
-      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>Troubleshooting</summary>
-      <ul style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--t-font-color-secondary, #aaa)' }}>
+      <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
+        Troubleshooting
+      </summary>
+      <ul
+        style={{
+          fontSize: 13,
+          lineHeight: 1.7,
+          color: themeCssVariables.font.color.secondary,
+        }}
+      >
         <li>
           <strong>401 Unauthorized</strong> — your Twenty session expired. Log
           out and back in.
         </li>
         <li>
           <strong>Sync stuck at pending</strong> — the background worker that
-          picks up runs is not wired yet. Pending rows are normal in the
-          current preview build; ask an admin if it stays pending overnight.
+          picks up runs is not wired yet. Pending rows are normal in the current
+          preview build; ask an admin if it stays pending overnight.
         </li>
         <li>
           <strong>Bulk import returns failed &gt; 0</strong> — open the
@@ -1599,9 +1976,9 @@ curl -H "Authorization: Bearer $TOKEN" \\
           the same natural_key. Make every row's natural_key unique.
         </li>
         <li>
-          <strong>Login screen reappears after deploy</strong> — JWT secret is pinned, but access
-          tokens expire on a TTL. Re-enter your credentials; the session sticks across deploys after
-          that.
+          <strong>Login screen reappears after deploy</strong> — JWT secret is
+          pinned, but access tokens expire on a TTL. Re-enter your credentials;
+          the session sticks across deploys after that.
         </li>
       </ul>
     </details>
