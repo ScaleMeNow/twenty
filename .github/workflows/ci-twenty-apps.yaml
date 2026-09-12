@@ -95,14 +95,38 @@ jobs:
         with:
           source: ${{ matrix.server-source }}
 
+      # dockerhub-latest runs the apps against the newest published Twenty
+      # release, which is ahead of this fork between weekly upstream rebases: a
+      # release that closes an API an app's tests use has no fix on this side
+      # until the rebase brings upstream's own adaptation in. That arm therefore
+      # reports drift (packages/premaccess/UPSTREAM-IMAGE-DRIFT.md) instead of
+      # gating; local, built from these files, stays blocking.
       - name: Test app against server
+        id: test-app
         if: matrix.app.hasIntegration
+        continue-on-error: ${{ matrix.server-source == 'dockerhub-latest' }}
         uses: ./.github/actions/test-twenty-app
         with:
           api-url: ${{ steps.twenty.outputs.server-url }}
           api-key: ${{ steps.twenty.outputs.api-key }}
           app-path: ${{ matrix.app.path }}
           mode: ${{ matrix.server-source == 'local' && 'installation-and-integration-test' || 'integration-test-only' }}
+
+      # Only reached when the step above failed and was tolerated, so it doubles
+      # as the assertion that no arm but dockerhub-latest ever is.
+      - name: Report tolerated failure
+        if: steps.test-app.outcome == 'failure'
+        env:
+          APP_NAME: ${{ matrix.app.name }}
+          SERVER_SOURCE: ${{ matrix.server-source }}
+        run: |
+          if [ "$SERVER_SOURCE" != 'dockerhub-latest' ]; then
+            echo "::error::$APP_NAME failed against the $SERVER_SOURCE server, which gates merges"
+            exit 1
+          fi
+          echo "::warning title=Published-image drift::$APP_NAME fails against twentycrm/twenty-app-dev:latest while the local arm passes"
+          echo "### Published-image drift: \`$APP_NAME\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Advisory arm: declare it in \`packages/premaccess/UPSTREAM-IMAGE-DRIFT.md\` or fix it." >> "$GITHUB_STEP_SUMMARY"
 
   ci-twenty-apps-status-check:
     if: always() && !cancelled()
