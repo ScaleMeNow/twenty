@@ -69,9 +69,13 @@ jobs:
           declare -A ALLOWED=(
             ["packages/twenty-server/src/app.module.ts"]=2
             ["packages/twenty-server/src/engine/api/graphql/graphql-config/graphql-config.service.ts"]=2
-            # upstream renamed useCreateAppRouter.tsx to useCreateWorkspaceAppRouter.tsx
-            ["packages/twenty-front/src/modules/app/hooks/useCreateWorkspaceAppRouter.tsx"]=2
-            ["packages/twenty-front/src/modules/navigation/components/NavigationDrawerOtherSection.tsx"]=8
+            # upstream builds the workspace router from a route-object list; the
+            # premaccess route is appended by wrapping that list in one call
+            # (import + 6-line wrap), see extensions/premaccess/routeObjects.tsx
+            ["packages/twenty-front/src/modules/app/hooks/useCreateWorkspaceAppRouter.tsx"]=7
+            # upstream deleted NavigationDrawerOtherSection; the sidebar entry is now
+            # an extension section mounted by one import + one JSX line
+            ["packages/twenty-front/src/modules/navigation/components/MainNavigationDrawerScrollableItems.tsx"]=2
             # root manifest: the premaccess workspace entry plus the security
             # resolutions whose holds are listed in packages/premaccess/SECURITY-HOLDS.md
             ["package.json"]=32
