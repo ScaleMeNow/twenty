@@ -95,6 +95,10 @@ jobs:
             # node_modules cache key and the cold install alone exceeds 5 minutes.
             # Upstream bug, not fork-specific — drop this when upstream raises it.
             [".github/workflows/ci-utils.yaml"]=3
+            # react-router ignore entries: its advisories are fixed in 7.18.0 only and
+            # the tree cannot leave 6.x, so the security updater failed on every run
+            # (see the hold in packages/premaccess/SECURITY-HOLDS.md)
+            [".github/dependabot.yml"]=13
             # published-image drift is reported, not gated: the matrix arm against the
             # published twenty image only warns when its ref no longer matches ours
             # (see packages/premaccess/UPSTREAM-IMAGE-DRIFT.md)

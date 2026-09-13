@@ -20,6 +20,15 @@ updates:
       # chokidar is pinned to v3 via a resolution: v4+ dropped native macOS
       # FSEvents and hits EMFILE on a repo this size (see #20316)
       - dependency-name: "chokidar"
+      # react-router's advisories are fixed in 7.18.0 only, and the tree holds
+      # 6.30.6 because react-router-dom@^6 pins it; v7 is a breaking migration
+      # react-router-dom 6 cannot consume. The security updater therefore fails
+      # on every run, and a red run nobody can fix is noise. The alerts stay
+      # open and keep failing check-security-holds.sh, so this hides the PR, not
+      # the problem. Declared in packages/premaccess/SECURITY-HOLDS.md; drop
+      # this entry when upstream migrates to react-router 7.
+      - dependency-name: "react-router"
+      - dependency-name: "react-router-dom"
   # Public Twenty apps are standalone packages (own lockfiles) excluded from the
   # root entry above. Each app folder is updated weekly, grouped into a single PR.
   - package-ecosystem: "npm"
@@ -33,6 +42,10 @@ updates:
       twenty-apps-public:
         patterns:
           - "*"
+    # Same react-router hold as the root entry above.
+    ignore:
+      - dependency-name: "react-router"
+      - dependency-name: "react-router-dom"
   # Internal Twenty apps, same treatment as the public apps above.
   - package-ecosystem: "npm"
     directories:
