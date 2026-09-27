@@ -137,9 +137,9 @@ jobs:
         if: steps.rebase.outputs.status == 'conflict'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STOPPED_AT: $STOPPED_AT
-          AHEAD: $AHEAD
-          BEHIND: $BEHIND
+          STOPPED_AT: ${{ steps.rebase.outputs.stopped_at }}
+          AHEAD: ${{ steps.rebase.outputs.ahead }}
+          BEHIND: ${{ steps.rebase.outputs.behind }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -160,6 +160,10 @@ jobs:
           Run: $RUN_URL
           EOF
           )"
+          # The 2026-09-21 run died here on "could not add label: 'rebase-conflict'
+          # not found", so the conflict never reached an issue. Ensure it, idempotently.
+          gh label create rebase-conflict --force --color B60205 \
+            --description "Weekly upstream rebase hit a conflict; see TWENTY-FORK-PLAN §7"
           EXISTING="$(gh issue list --label rebase-conflict --state open --json number -q '.[0].number')"
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "$BODY"
