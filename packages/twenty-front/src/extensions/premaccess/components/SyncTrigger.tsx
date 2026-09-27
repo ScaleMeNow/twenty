@@ -1,6 +1,6 @@
 import { useMutation } from '@apollo/client/react';
 import { useState } from 'react';
-import { themeCssVariables } from 'twenty-ui/theme-constants';
+import { themeCssVariables } from 'twenty-ui/theme';
 
 import { TRIGGER_SYNC_MUTATION } from '../graphql/premaccess.queries';
 
