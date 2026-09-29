@@ -78,10 +78,12 @@ jobs:
             # upstream deleted NavigationDrawerOtherSection; the sidebar entry is now
             # an extension section mounted by one import + one JSX line
             ["packages/twenty-front/src/modules/navigation/components/MainNavigationDrawerScrollableItems.tsx"]=2
-            # root manifest: the premaccess workspace entry only. Upstream now carries
-            # every security resolution the fork used to add; a new one must be named in
-            # "//resolutions" and raise this cap in the same commit.
-            ["package.json"]=2
+            # root manifest: the premaccess workspace entry (2) plus the fork's security
+            # resolutions (9: multer, 3x adm-zip, miniflare/undici, 2x @ai-sdk, the comma
+            # on the line they follow, and the "//resolutions" line naming them under
+            # PREMACCESS FORK). A new one must be named there and set this cap to the
+            # exact new count in the same commit.
+            ["package.json"]=11
             ["packages/twenty-docker/twenty/Dockerfile"]=10
             # yarn.lock grows with every fork dependency plus upstream drift; it never
             # conflicts in a way that makes a rebase expensive, so the cap only exists to
