@@ -33,11 +33,6 @@ updates:
       twenty-apps-public:
         patterns:
           - "*"
-    # react-router 6.30.6 via the published twenty-ui these apps consume; see the
-    # hold in packages/premaccess/SECURITY-HOLDS.md. Drop when that package moves to v7.
-    ignore:
-      - dependency-name: "react-router"
-      - dependency-name: "react-router-dom"
   # Internal Twenty apps, same treatment as the public apps above.
   - package-ecosystem: "npm"
     directories:
