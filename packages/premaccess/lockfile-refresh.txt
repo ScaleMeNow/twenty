@@ -1,0 +1,36 @@
+# In-range lockfile refreshes the fork carries on top of upstream.
+#
+# Each line: <directory> <package>. rebase-onto-upstream.sh runs
+# `yarn up -R <package> --mode=update-lockfile` in <directory> after every rebase,
+# because the replay takes upstream's lockfiles and a lockfile-only fix would be
+# dropped as an empty commit (sharp 0.35.4 on the nested apps, 2026-10-13).
+# Only versions inside the ranges the manifests already declare: anything that
+# needs a forced version goes to "resolutions" in the root package.json.
+#
+# Retire a line once upstream's lockfile resolves a patched version on its own:
+# the refresh then changes nothing, and check-security-holds.sh shows the alert fixed.
+
+# sharp < 0.35.5 (high): twenty-sdk declares ^0.35.3, next ^0.35.4
+. sharp
+packages/twenty-apps/examples/document-generator sharp
+packages/twenty-apps/examples/postcard sharp
+packages/twenty-apps/internal/real-estate sharp
+packages/twenty-apps/public/call-recorder sharp
+packages/twenty-apps/public/companion sharp
+packages/twenty-apps/public/discord sharp
+packages/twenty-apps/public/exa sharp
+packages/twenty-apps/public/fathom sharp
+packages/twenty-apps/public/fireflies sharp
+packages/twenty-apps/public/granola sharp
+packages/twenty-apps/public/last-contact sharp
+packages/twenty-apps/public/linear sharp
+packages/twenty-apps/public/people-data-labs sharp
+packages/twenty-apps/public/slack sharp
+packages/twenty-apps/public/teams sharp
+packages/twenty-server/src/engine/core-modules/application/application-package/constants/seed-dependencies sharp
+# @graphql-tools/executor-legacy-ws <= 1.1.34 (high): url-loader declares ^1.1.28
+. @graphql-tools/executor-legacy-ws
+# @vue/server-renderer < 3.5.42 (high): vue ^3.5.30 pins it to its own version
+. vue
+# @graphql-tools/utils <= 12.0.0 (high): the ^12 consumers move to the patched 12.x line
+. @graphql-tools/utils
