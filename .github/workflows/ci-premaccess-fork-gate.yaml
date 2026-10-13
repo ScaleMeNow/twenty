@@ -31,6 +31,9 @@ on:
     # ci/rebase-**: a rebase PR is always CONFLICTING against main, so GitHub runs
     # no pull_request workflow on it -- the gate has to run on the branch push.
     branches: [main, 'ci/rebase-**']
+  # The weekly rebase job pushes with GITHUB_TOKEN, which fires no push trigger;
+  # it dispatches this workflow on the branch instead.
+  workflow_dispatch:
 
 permissions:
   contents: read
