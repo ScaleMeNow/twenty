@@ -117,13 +117,14 @@ jobs:
 
       # A push made with GITHUB_TOKEN starts no workflow, so the branch's own push
       # trigger never fires here; dispatch is the one event GITHUB_TOKEN may raise.
-      - name: Start rebase verify
+      - name: Start rebase verify + fork gate
         if: steps.rebase.outputs.status == 'clean'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           gh workflow run ci-premaccess-rebase-verify.yaml --ref "${{ steps.rebase.outputs.branch }}"
+          gh workflow run ci-premaccess-fork-gate.yaml --ref "${{ steps.rebase.outputs.branch }}"
 
       - name: Open rebase PR
         if: steps.rebase.outputs.status == 'clean'
