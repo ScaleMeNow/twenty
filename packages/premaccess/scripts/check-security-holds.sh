@@ -24,7 +24,8 @@
 #
 # "lockfile in this checkout" is the alert's manifest_path read from disk and matched
 # against the advisory range with the repo's own semver, so "fixed" is proven, never
-# assumed. Run from any directory of the repo after `yarn install`.
+# assumed. For a package.json manifest, the lowest version its declared range admits
+# is what gets matched. Run from any directory of the repo after `yarn install`.
 #
 # GITHUB_TOKEN cannot read the Dependabot alerts API, so this runs from a machine with
 # `gh auth` (or a workflow carrying a PAT), not from a stock Actions job.
@@ -80,12 +81,22 @@ for (const row of fs.readFileSync(file, 'utf8').split('\n').filter(Boolean)) {
   const [, , pkg, manifest, range] = row.split('\t');
   const lockfile = path.join(root, manifest);
   let lock = 'no-lockfile';
+  const semverRange = range.replace(/,\s*/g, ' ');
   if (manifest.endsWith('yarn.lock') && fs.existsSync(lockfile)) {
-    const semverRange = range.replace(/,\s*/g, ' ');
     const hit = versionsIn(lockfile, pkg).some((v) =>
       semver.satisfies(v, semverRange, { includePrerelease: true }),
     );
     lock = hit ? 'vulnerable' : 'patched';
+  } else if (manifest.endsWith('package.json') && fs.existsSync(lockfile)) {
+    // Manifest-level alert: the lowest version the declared range admits decides it.
+    const json = JSON.parse(fs.readFileSync(lockfile, 'utf8'));
+    const declared = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']
+      .map((field) => json[field]?.[pkg])
+      .find(Boolean);
+    const floor = declared && semver.validRange(declared) ? semver.minVersion(declared) : null;
+    if (floor) {
+      lock = semver.satisfies(floor, semverRange, { includePrerelease: true }) ? 'vulnerable' : 'patched';
+    }
   }
   console.log(`${row}\t${lock}`);
 }
