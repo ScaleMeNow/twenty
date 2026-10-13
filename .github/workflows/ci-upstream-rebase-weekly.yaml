@@ -24,6 +24,11 @@
 # outcome (merge-base age vs upstream) is watched daily from outside GitHub by
 # routine-health.py, which does not depend on this workflow running at all.
 #
+# From 2026-09-14 to 2026-10-05 every run stopped on yarn.lock, which four fork
+# commits edit and upstream changes weekly (issue #70, 755 behind). The replay now
+# goes through packages/premaccess/scripts/rebase-onto-upstream.sh: yarn.lock and
+# package.json conflicts are resolved there, the lockfile is regenerated once.
+#
 # Reference: docs/TWENTY-FORK-PLAN.md §6 + §7 in ScaleMeNow/meta-dojo.
 
 name: upstream-rebase-weekly
@@ -56,6 +61,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # rebase-onto-upstream.sh regenerates yarn.lock after the replay.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+      - run: corepack enable
+
       - name: Fetch upstream
         run: |
           git remote add upstream https://github.com/twentyhq/twenty.git
@@ -83,14 +94,20 @@ jobs:
           fi
 
           git checkout -B "$BRANCH" origin/main
-          if git rebase upstream/main; then
-            echo "status=clean" >> "$GITHUB_OUTPUT"
-          else
-            echo "status=conflict" >> "$GITHUB_OUTPUT"
-            git diff --name-only --diff-filter=U | sort -u > /tmp/conflicts.txt
-            echo "stopped_at=$(git log -1 --format='%h %s' REBASE_HEAD)" >> "$GITHUB_OUTPUT"
-            git rebase --abort
-          fi
+          # yarn.lock and package.json conflicts recur every week and are resolved
+          # by the script; anything else stops it (exit 3), aborted, list in the file.
+          rc=0
+          CONFLICTS_FILE=/tmp/conflicts.txt \
+            bash packages/premaccess/scripts/rebase-onto-upstream.sh upstream/main \
+            | tee /tmp/rebase.log || rc=$?
+          case "$rc" in
+            0) echo "status=clean" >> "$GITHUB_OUTPUT" ;;
+            3)
+              echo "status=conflict" >> "$GITHUB_OUTPUT"
+              echo "stopped_at=$(sed -n 's/^STOPPED_AT //p' /tmp/rebase.log)" >> "$GITHUB_OUTPUT"
+              ;;
+            *) echo "::error::rebase-onto-upstream.sh exited $rc"; exit "$rc" ;;
+          esac
 
       - name: Push rebased branch
         if: steps.rebase.outputs.status == 'clean'
