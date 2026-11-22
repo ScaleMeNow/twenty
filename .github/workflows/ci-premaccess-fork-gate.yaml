@@ -94,8 +94,6 @@ jobs:
             ["yarn.lock"]=650
             # fork-only CodeBuild spec for the BAM-hosted image build, absent upstream
             [".bam-image-build-buildspec.yml"]=40
-            # premaccess is a workspace package, so twenty-server declares it as a dep
-            ["packages/twenty-server/package.json"]=2
             # danger-js timeout-minutes 5 -> 15; a lockfile change busts the
             # node_modules cache key and the cold install alone exceeds 5 minutes.
             # Upstream bug, not fork-specific — drop this when upstream raises it.
@@ -120,8 +118,8 @@ jobs:
           )
 
           # Dependency manifests in nested workspaces. Matched only for paths that
-          # have no exact ALLOWED entry, so the tight caps on the root manifests and
-          # on packages/twenty-server/package.json still win. "binary" means the file
+          # have no exact ALLOWED entry, so the tight caps on the root manifests still
+          # win. "binary" means the file
           # is tracked as binary upstream and has no line count to cap.
           dep_manifest_cap() {
             case "$1" in

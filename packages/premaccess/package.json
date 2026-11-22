@@ -6,8 +6,10 @@
   "license": "UNLICENSED",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "3.1001.0"
+  },
   "peerDependencies": {
-    "@aws-sdk/client-sqs": "*",
     "@nestjs/common": "*",
     "@nestjs/graphql": "*",
     "jsonwebtoken": "*",
