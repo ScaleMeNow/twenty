@@ -17,6 +17,8 @@ dismissed and declared.
 | Package | Alerts | Why it cannot be fixed | Retire when |
 |---|---|---|---|
 | `@cyntler/react-doc-viewer` | 1 medium | No patched version (`<= 1.17.1` is every release). A direct upstream dependency of twenty-front; removing it is a product decision, not a dependency bump. | upstream publishes a fix, or twenty-front drops the viewer. |
+| `glob` | 3 medium (GHSA-3g3m-2fjr-6pw4) | Only the three twenty-server dependency dirs (`application-package/constants/standard-application-dependencies`, `workspace-custom-application-dependencies`, `logic-function-drivers/constants/common-layer-dependencies`): archiver-utils 5 declares glob ^10 and cacache 20 glob ^13, patched only in 14.0.2. Forcing it means editing those upstream manifests and lockfiles, whose checksums upstream's `get-default-application-package-fields.util.spec.ts` pins, and that changes every workspace's application layer identity. Root and the example apps are forced to 14 in `RESOLUTIONS.md`. Reached only by zip and npm-cache tooling, never by user input. | archiver-utils and cacache declare glob >= 14.0.2, or upstream forces it in those dirs. |
+| `minimatch` | 3 medium (GHSA-g3hv-75wg-m249) | Same three dirs, through the glob 10/13 copies above (minimatch ^9, ^10); patched only in 11.0.1. Same checksum constraint. | the glob hold above retires, or upstream forces minimatch >= 11.0.1 in those dirs. |
 
 ## Reconciling
 
