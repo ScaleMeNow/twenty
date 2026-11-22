@@ -1,3 +1,4 @@
+import { doNotTranslate } from 'twenty-shared/i18n';
 import { useMutation, useQuery } from '@apollo/client/react';
 
 import {
@@ -50,8 +51,17 @@ export const InferredEdgesReview = ({
     REJECT_INFERRED_EDGES_BELOW_MUTATION,
   );
 
-  if (loading) return <div>Loading inferred edges…</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (loading) {
+    return <div>{doNotTranslate('Loading inferred edges…')}</div>;
+  }
+  if (error) {
+    return (
+      <div>
+        {doNotTranslate('Error: ')}
+        {error.message}
+      </div>
+    );
+  }
 
   const edges = data?.inferredEdgesPending ?? [];
 
@@ -64,7 +74,7 @@ export const InferredEdgesReview = ({
           alignItems: 'baseline',
         }}
       >
-        <h2>AI-inferred associations</h2>
+        <h2>{doNotTranslate('AI-inferred associations')}</h2>
         <div>
           {edges.length > 0 && (
             <button
@@ -73,7 +83,9 @@ export const InferredEdgesReview = ({
                   'Reject inferred edges below confidence:',
                   '0.85',
                 );
-                if (!ceil) return;
+                if (!ceil) {
+                  return;
+                }
                 const runId = edges[0].runId;
                 await rejectBelow({
                   variables: { runId, confidence: parseFloat(ceil) },
@@ -82,24 +94,27 @@ export const InferredEdgesReview = ({
               }}
               disabled={rejecting}
             >
-              Bulk reject below…
+              {doNotTranslate('Bulk reject below…')}
             </button>
           )}
         </div>
       </header>
 
       {edges.length === 0 ? (
-        <p>No inferred edges pending review at confidence ≥ {minConfidence}.</p>
+        <p>
+          {doNotTranslate('No inferred edges pending review at confidence ≥ ')}
+          {minConfidence}.
+        </p>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Conf</th>
-              <th>Semantic</th>
-              <th>From (parent)</th>
-              <th>→ To</th>
-              <th>Evidence</th>
-              <th>Action</th>
+              <th>{doNotTranslate('Conf')}</th>
+              <th>{doNotTranslate('Semantic')}</th>
+              <th>{doNotTranslate('From (parent)')}</th>
+              <th>{doNotTranslate('→ To')}</th>
+              <th>{doNotTranslate('Evidence')}</th>
+              <th>{doNotTranslate('Action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -133,7 +148,7 @@ export const InferredEdgesReview = ({
                       void refetch();
                     }}
                   >
-                    ✓ promote
+                    {doNotTranslate('✓ promote')}
                   </button>
                 </td>
               </tr>

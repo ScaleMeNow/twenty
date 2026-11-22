@@ -1,3 +1,4 @@
+import { doNotTranslate } from 'twenty-shared/i18n';
 import { useMutation } from '@apollo/client/react';
 import { useState } from 'react';
 import { themeCssVariables } from 'twenty-ui/theme';
@@ -42,23 +43,35 @@ export const SyncTrigger = ({ connectorId }: SyncTriggerProps) => {
         borderRadius: 4,
       }}
     >
-      <h3>Run sync</h3>
+      <h3>{doNotTranslate('Run sync')}</h3>
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={() => run('DELTA', true)} disabled={loading}>
-          Dry-run delta
+          {doNotTranslate('Dry-run delta')}
         </button>
         <button onClick={() => run('DELTA', false)} disabled={loading}>
-          Run delta
+          {doNotTranslate('Run delta')}
         </button>
         <button onClick={() => run('FULL', false)} disabled={loading}>
-          Full re-sync
+          {doNotTranslate('Full re-sync')}
         </button>
       </div>
-      {loading && <p>Starting {lastMode}…</p>}
-      {error && <p style={{ color: 'crimson' }}>Failed: {error.message}</p>}
+      {loading && (
+        <p>
+          {doNotTranslate('Starting ')}
+          {lastMode}…
+        </p>
+      )}
+      {error && (
+        <p style={{ color: 'crimson' }}>
+          {doNotTranslate('Failed: ')}
+          {error.message}
+        </p>
+      )}
       {data?.triggerSync && (
         <p>
-          Started <code>{data.triggerSync.id}</code> — status:{' '}
+          {doNotTranslate('Started ')}
+          <code>{data.triggerSync.id}</code>
+          {doNotTranslate(' — status:')}{' '}
           <strong>{data.triggerSync.status}</strong>
         </p>
       )}

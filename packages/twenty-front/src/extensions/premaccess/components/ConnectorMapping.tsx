@@ -1,3 +1,4 @@
+import { doNotTranslate } from 'twenty-shared/i18n';
 import { useMutation } from '@apollo/client/react';
 import { useState } from 'react';
 
@@ -66,16 +67,16 @@ export const ConnectorMapping = ({
 
   return (
     <div>
-      <h3>Field mappings</h3>
+      <h3>{doNotTranslate('Field mappings')}</h3>
       <table>
         <thead>
           <tr>
-            <th>Twenty object</th>
-            <th>Source property</th>
-            <th>Type</th>
-            <th>Action</th>
-            <th>Twenty field</th>
-            <th>AI suggestion</th>
+            <th>{doNotTranslate('Twenty object')}</th>
+            <th>{doNotTranslate('Source property')}</th>
+            <th>{doNotTranslate('Type')}</th>
+            <th>{doNotTranslate('Action')}</th>
+            <th>{doNotTranslate('Twenty field')}</th>
+            <th>{doNotTranslate('AI suggestion')}</th>
           </tr>
         </thead>
         <tbody>
@@ -107,9 +108,11 @@ export const ConnectorMapping = ({
                       )
                     }
                   >
-                    <option value="alias">alias</option>
-                    <option value="custom">custom TEXT</option>
-                    <option value="ignore">ignore</option>
+                    <option value="alias">{doNotTranslate('alias')}</option>
+                    <option value="custom">
+                      {doNotTranslate('custom TEXT')}
+                    </option>
+                    <option value="ignore">{doNotTranslate('ignore')}</option>
                   </select>
                 </td>
                 <td>
@@ -127,7 +130,9 @@ export const ConnectorMapping = ({
                         )
                       }
                     >
-                      <option value="">(pick a field)</option>
+                      <option value="">
+                        {doNotTranslate('(pick a field)')}
+                      </option>
                       {fields.map((f) => (
                         <option key={f.name} value={f.name}>
                           {f.name} ({f.type})
