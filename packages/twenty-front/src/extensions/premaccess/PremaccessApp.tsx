@@ -1,3 +1,4 @@
+import { doNotTranslate } from 'twenty-shared/i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { themeCssVariables } from 'twenty-ui/theme';
 
@@ -61,7 +62,9 @@ const WORKSPACE_ID = '335a4fd5-b578-441d-831d-445222bc08b8';
 
 const readAccessTokenFromCookie = (): string | null => {
   const match = document.cookie.match(/(?:^|;\s*)tokenPair=([^;]+)/);
-  if (match === null) return null;
+  if (match === null) {
+    return null;
+  }
   try {
     const parsed = JSON.parse(decodeURIComponent(match[1])) as {
       accessOrWorkspaceAgnosticToken?: { token?: string };
@@ -98,7 +101,7 @@ const fetchJSON = async <T,>(path: string, init?: RequestInit): Promise<T> => {
 const styles = {
   page: {
     padding: '24px 28px',
-    fontFamily: 'Inter, system-ui, sans-serif',
+    fontFamily: doNotTranslate('Inter, system-ui, sans-serif'),
     color: themeCssVariables.font.color.primary,
     height: '100%',
     overflowY: 'auto' as const,
@@ -108,7 +111,7 @@ const styles = {
   } as const,
   pageInner: {
     maxWidth: 1280,
-    margin: '0 auto',
+    margin: doNotTranslate('0 auto'),
   } as const,
   h1: { fontSize: 22, fontWeight: 600, marginBottom: 4 } as const,
   subtitle: {
@@ -209,7 +212,9 @@ const styles = {
     borderRadius: 6,
     marginBottom: 16,
     fontSize: 13,
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: doNotTranslate(
+      'ui-monospace, SFMono-Regular, Menlo, monospace',
+    ),
   },
   okBanner: {
     background: themeCssVariables.background.transparent.success,
@@ -277,7 +282,9 @@ const styles = {
     background: themeCssVariables.background.secondary,
     padding: '2px 5px',
     borderRadius: 3,
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: doNotTranslate(
+      'ui-monospace, SFMono-Regular, Menlo, monospace',
+    ),
     fontSize: 12,
     color: themeCssVariables.font.color.secondary,
   } as const,
@@ -285,7 +292,9 @@ const styles = {
     background: themeCssVariables.background.secondary,
     padding: 12,
     borderRadius: 4,
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: doNotTranslate(
+      'ui-monospace, SFMono-Regular, Menlo, monospace',
+    ),
     fontSize: 12,
     color: themeCssVariables.font.color.secondary,
     overflow: 'auto' as const,
@@ -328,10 +337,10 @@ const pillFor = (status: string) => {
 type TabKey = 'overview' | 'mappings' | 'bulk' | 'inferred' | 'docs';
 
 const STAGES: Array<{ key: string; label: string }> = [
-  { key: 'pending', label: 'Queued (SQS)' },
-  { key: 'in_progress', label: 'Marked in-progress (Lambda)' },
-  { key: 'build', label: 'CodeBuild migration' },
-  { key: 'done', label: 'Marker complete (Lambda)' },
+  { key: 'pending', label: doNotTranslate('Queued (SQS)') },
+  { key: 'in_progress', label: doNotTranslate('Marked in-progress (Lambda)') },
+  { key: 'build', label: doNotTranslate('CodeBuild migration') },
+  { key: 'done', label: doNotTranslate('Marker complete (Lambda)') },
 ];
 
 const PipelineStages = ({ s }: { s: Sync }) => {
@@ -340,21 +349,40 @@ const PipelineStages = ({ s }: { s: Sync }) => {
   const hasBuild = s.buildId !== null;
   const stateFor = (key: string): 'pending' | 'running' | 'done' | 'failed' => {
     if (status === 'failed') {
-      if (key === 'pending') return 'done';
-      if (key === 'in_progress')
+      if (key === 'pending') {
+        return 'done';
+      }
+      if (key === 'in_progress') {
         return s.lastMarkerAt !== null ? 'done' : 'failed';
-      if (key === 'build') return hasBuild ? 'failed' : 'pending';
-      if (key === 'done') return 'failed';
+      }
+      if (key === 'build') {
+        return hasBuild ? 'failed' : 'pending';
+      }
+      if (key === 'done') {
+        return 'failed';
+      }
     }
-    if (status === 'completed') return 'done';
+    if (status === 'completed') {
+      return 'done';
+    }
     if (status === 'in_progress') {
-      if (key === 'pending') return 'done';
-      if (key === 'in_progress') return 'done';
-      if (key === 'build') return hasBuild ? 'running' : 'running';
-      if (key === 'done') return 'pending';
+      if (key === 'pending') {
+        return 'done';
+      }
+      if (key === 'in_progress') {
+        return 'done';
+      }
+      if (key === 'build') {
+        return hasBuild ? 'running' : 'running';
+      }
+      if (key === 'done') {
+        return 'pending';
+      }
     }
     if (status === 'pending') {
-      if (key === 'pending') return 'running';
+      if (key === 'pending') {
+        return 'running';
+      }
       return 'pending';
     }
     return 'pending';
@@ -404,7 +432,7 @@ const PipelineStages = ({ s }: { s: Sync }) => {
                 color: themeCssVariables.font.color.tertiary,
               }}
             >
-              {st === 'pending' && 'not yet'}
+              {st === 'pending' && doNotTranslate('not yet')}
               {st === 'running' && 'running…'}
               {st === 'done' && 'done'}
               {st === 'failed' && 'failed'}
@@ -440,7 +468,7 @@ const InfoIcon = ({ tip }: { tip: string }) => (
       userSelect: 'none',
     }}
   >
-    i
+    {doNotTranslate('i')}
   </span>
 );
 
@@ -512,37 +540,55 @@ export const PremaccessApp = () => {
   return (
     <div style={styles.page}>
       <div style={styles.pageInner}>
-        <div style={styles.h1}>Premaccess — CRM Sync Console</div>
+        <div style={styles.h1}>
+          {doNotTranslate('Premaccess — CRM Sync Console')}
+        </div>
         <div style={styles.subtitle}>
-          Operator console for CRM-Manager autonomy. Workspace {WORKSPACE_ID}.
+          {doNotTranslate(
+            'Operator console for CRM-Manager autonomy. Workspace ',
+          )}
+          {WORKSPACE_ID}.
         </div>
 
         <div style={styles.helpBanner}>
-          <strong>How this works:</strong> Each <em>connector</em> is one source
-          CRM (HubSpot, Salesforce…) linked to this Twenty workspace. A{' '}
-          <em>sync</em> reads from the source, normalises rows, and loads them
-          into Twenty's tables. The pipeline also detects{' '}
-          <em>inferred edges</em> using Bedrock — links between tasks/notes and
-          people/companies that the source CRM didn't have explicitly. You
-          approve or reject those before they touch the workspace.
+          <strong>{doNotTranslate('How this works:')}</strong>
+          {doNotTranslate(' Each ')}
+          <em>{doNotTranslate('connector')}</em>
+          {doNotTranslate(
+            ' is one source CRM (HubSpot, Salesforce…) linked to this Twenty workspace. A',
+          )}{' '}
+          <em>{doNotTranslate('sync')}</em>
+          {doNotTranslate(
+            " reads from the source, normalises rows, and loads them into Twenty's tables. The pipeline also detects",
+          )}{' '}
+          <em>{doNotTranslate('inferred edges')}</em>
+          {doNotTranslate(
+            " using Bedrock — links between tasks/notes and people/companies that the source CRM didn't have explicitly. You approve or reject those before they touch the workspace.",
+          )}
           <br />
           <span style={{ color: themeCssVariables.font.color.tertiary }}>
-            Need the full reference? Open the Docs tab — quick reference for the
-            happy path, cURL examples, and troubleshooting.
+            {doNotTranslate(
+              'Need the full reference? Open the Docs tab — quick reference for the happy path, cURL examples, and troubleshooting.',
+            )}
           </span>
         </div>
 
-        {err !== null && <div style={styles.errorBanner}>Error: {err}</div>}
+        {err !== null && (
+          <div style={styles.errorBanner}>
+            {doNotTranslate('Error: ')}
+            {err}
+          </div>
+        )}
         {ok !== null && <div style={styles.okBanner}>{ok}</div>}
 
         <div style={styles.tabs}>
           {(
             [
-              ['overview', '1. Connectors & runs'],
-              ['mappings', '2. Field & assoc. mappings'],
-              ['bulk', '3. Bulk import'],
-              ['inferred', '4. Review inferred edges'],
-              ['docs', 'Docs'],
+              ['overview', doNotTranslate('1. Connectors & runs')],
+              ['mappings', doNotTranslate('2. Field & assoc. mappings')],
+              ['bulk', doNotTranslate('3. Bulk import')],
+              ['inferred', doNotTranslate('4. Review inferred edges')],
+              ['docs', doNotTranslate('Docs')],
             ] as Array<[TabKey, string]>
           ).map(([k, label]) => (
             <div
@@ -561,7 +607,7 @@ export const PremaccessApp = () => {
             syncs={syncs}
             busy={busy}
             onCreate={(input) =>
-              wrap('Connector created', () =>
+              wrap(doNotTranslate('Connector created'), () =>
                 fetchJSON('/_premaccess/connectors', {
                   method: 'POST',
                   body: JSON.stringify(input),
@@ -569,15 +615,17 @@ export const PremaccessApp = () => {
               )
             }
             onTrigger={(id, dryRun) =>
-              wrap(`Sync ${dryRun ? 'dry-run' : 'live'} triggered`, () =>
-                fetchJSON(`/_premaccess/connectors/${id}/sync`, {
-                  method: 'POST',
-                  body: JSON.stringify({ mode: 'DELTA', dryRun }),
-                }),
+              wrap(
+                doNotTranslate(`Sync ${dryRun ? 'dry-run' : 'live'} triggered`),
+                () =>
+                  fetchJSON(`/_premaccess/connectors/${id}/sync`, {
+                    method: 'POST',
+                    body: JSON.stringify({ mode: 'DELTA', dryRun }),
+                  }),
               )
             }
             onUpdate={(id, patch) =>
-              wrap('Connector updated', () =>
+              wrap(doNotTranslate('Connector updated'), () =>
                 fetchJSON(`/_premaccess/connectors/${id}`, {
                   method: 'PATCH',
                   body: JSON.stringify(patch),
@@ -585,7 +633,7 @@ export const PremaccessApp = () => {
               )
             }
             onDelete={(id) =>
-              wrap('Connector deleted', () =>
+              wrap(doNotTranslate('Connector deleted'), () =>
                 fetchJSON(`/_premaccess/connectors/${id}`, {
                   method: 'DELETE',
                 }),
@@ -601,7 +649,7 @@ export const PremaccessApp = () => {
             setSelectedConnectorId={setSelectedConnectorId}
             busy={busy}
             onFieldMap={(connectorId, body) =>
-              wrap('Field mapping saved', () =>
+              wrap(doNotTranslate('Field mapping saved'), () =>
                 fetchJSON(
                   `/_premaccess/connectors/${connectorId}/field-mapping`,
                   {
@@ -612,7 +660,7 @@ export const PremaccessApp = () => {
               )
             }
             onAssocMap={(connectorId, body) =>
-              wrap('Association mapping saved', () =>
+              wrap(doNotTranslate('Association mapping saved'), () =>
                 fetchJSON(
                   `/_premaccess/connectors/${connectorId}/association-mapping`,
                   {
@@ -623,7 +671,7 @@ export const PremaccessApp = () => {
               )
             }
             onFieldDelete={(connectorId, twentyObject, sourceProperty) =>
-              wrap('Field override removed', () =>
+              wrap(doNotTranslate('Field override removed'), () =>
                 fetchJSON(
                   `/_premaccess/connectors/${connectorId}/field-mapping?twentyObject=${encodeURIComponent(twentyObject)}&sourceProperty=${encodeURIComponent(sourceProperty)}`,
                   { method: 'DELETE' },
@@ -631,7 +679,7 @@ export const PremaccessApp = () => {
               )
             }
             onAssocDelete={(connectorId, nativePair) =>
-              wrap('Association override removed', () =>
+              wrap(doNotTranslate('Association override removed'), () =>
                 fetchJSON(
                   `/_premaccess/connectors/${connectorId}/association-mapping?nativePair=${encodeURIComponent(nativePair)}`,
                   { method: 'DELETE' },
@@ -648,7 +696,7 @@ export const PremaccessApp = () => {
             setSelectedConnectorId={setSelectedConnectorId}
             busy={busy}
             onSubmit={(connectorId, body) =>
-              wrap(`Bulk import queued`, () =>
+              wrap(doNotTranslate(`Bulk import queued`), () =>
                 fetchJSON(
                   `/_premaccess/connectors/${connectorId}/bulk-import`,
                   {
@@ -668,7 +716,7 @@ export const PremaccessApp = () => {
             setMinConfidence={setMinConfidence}
             busy={busy}
             onPromote={(e) =>
-              wrap('Edge promoted', () =>
+              wrap(doNotTranslate('Edge promoted'), () =>
                 fetchJSON('/_premaccess/inferred-edges/promote', {
                   method: 'POST',
                   body: JSON.stringify({
@@ -681,7 +729,7 @@ export const PremaccessApp = () => {
               )
             }
             onRejectBelow={(runId, conf) =>
-              wrap('Edges rejected', () =>
+              wrap(doNotTranslate('Edges rejected'), () =>
                 fetchJSON('/_premaccess/inferred-edges/reject-below', {
                   method: 'POST',
                   body: JSON.stringify({ runId, confidence: conf }),
@@ -732,43 +780,51 @@ const OverviewTab = ({
     <>
       <div style={styles.formCard}>
         <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
-          + Connect a new source CRM
+          {doNotTranslate('+ Connect a new source CRM')}
         </div>
         <div style={styles.sectionHelp}>
-          Pick the source CRM and give it a memorable display name. Credentials
-          for the source are configured separately by an admin before the
-          connector can run — ask if you don't have them yet.
+          {doNotTranslate(
+            "Pick the source CRM and give it a memorable display name. Credentials for the source are configured separately by an admin before the connector can run — ask if you don't have them yet.",
+          )}
         </div>
         <div style={{ ...styles.formGrid, marginTop: 12 }}>
           <div>
             <label style={styles.label}>
-              Source{' '}
-              <InfoIcon tip="Source CRM type. Pick the system you're pulling data from." />
+              {doNotTranslate('Source')}{' '}
+              <InfoIcon
+                tip={doNotTranslate(
+                  "Source CRM type. Pick the system you're pulling data from.",
+                )}
+              />
             </label>
             <select
               style={styles.input}
               value={source}
               onChange={(e) => setSource(e.target.value)}
             >
-              <option value="hubspot">hubspot</option>
+              <option value="hubspot">{doNotTranslate('hubspot')}</option>
               <option value="salesforce" disabled>
-                salesforce (coming soon)
+                {doNotTranslate('salesforce (coming soon)')}
               </option>
               <option value="pipedrive" disabled>
-                pipedrive (coming soon)
+                {doNotTranslate('pipedrive (coming soon)')}
               </option>
             </select>
           </div>
           <div>
             <label style={styles.label}>
-              Display name{' '}
-              <InfoIcon tip="Free-text name shown in the connectors list. Pick something colleagues will recognise (e.g. 'HubSpot Prod', 'HubSpot Sandbox')." />
+              {doNotTranslate('Display name')}{' '}
+              <InfoIcon
+                tip={doNotTranslate(
+                  "Free-text name shown in the connectors list. Pick something colleagues will recognise (e.g. 'HubSpot Prod', 'HubSpot Sandbox').",
+                )}
+              />
             </label>
             <input
               style={styles.input}
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="HubSpot Prod"
+              placeholder={doNotTranslate('HubSpot Prod')}
             />
           </div>
         </div>
@@ -783,41 +839,63 @@ const OverviewTab = ({
             })
           }
         >
-          Create connector
+          {doNotTranslate('Create connector')}
         </button>
       </div>
 
       <section style={styles.section}>
         <div style={styles.sectionHeader}>
-          <div style={styles.sectionTitle}>Connectors</div>
+          <div style={styles.sectionTitle}>{doNotTranslate('Connectors')}</div>
           <div style={styles.sectionHelp}>
-            One row per source CRM linked to this workspace.
+            {doNotTranslate('One row per source CRM linked to this workspace.')}
           </div>
         </div>
         <table style={styles.table}>
           <thead>
             <tr style={styles.thRow}>
-              <Th tip="Connector kind (hubspot, salesforce, …)">Source</Th>
-              <Th tip="Display name you set when creating the connector">
-                Name
+              <Th
+                tip={doNotTranslate('Connector kind (hubspot, salesforce, …)')}
+              >
+                {doNotTranslate('Source')}
               </Th>
-              <Th tip="active = healthy. failed = last sync errored. Hover the last-sync cell for the run status.">
-                Status
+              <Th
+                tip={doNotTranslate(
+                  'Display name you set when creating the connector',
+                )}
+              >
+                {doNotTranslate('Name')}
               </Th>
-              <Th tip="Number of HubSpot/source properties remapped to a Twenty field. 0 means the default mapping.yaml is used unchanged.">
-                Field overrides
+              <Th
+                tip={doNotTranslate(
+                  'active = healthy. failed = last sync errored. Hover the last-sync cell for the run status.',
+                )}
+              >
+                {doNotTranslate('Status')}
               </Th>
-              <Th tip="Wall-clock time the most recent run was triggered. Empty if never run.">
-                Last sync
+              <Th
+                tip={doNotTranslate(
+                  'Number of HubSpot/source properties remapped to a Twenty field. 0 means the default mapping.yaml is used unchanged.',
+                )}
+              >
+                {doNotTranslate('Field overrides')}
               </Th>
-              <th style={styles.th}>Action</th>
+              <Th
+                tip={doNotTranslate(
+                  'Wall-clock time the most recent run was triggered. Empty if never run.',
+                )}
+              >
+                {doNotTranslate('Last sync')}
+              </Th>
+              <th style={styles.th}>{doNotTranslate('Action')}</th>
             </tr>
           </thead>
           <tbody>
             {connectors.length === 0 && (
               <tr style={styles.tdRow}>
                 <td style={styles.td} colSpan={6}>
-                  No connectors yet. Use the form above to create one.
+                  {doNotTranslate(
+                    'No connectors yet. Use the form above to create one.',
+                  )}
                 </td>
               </tr>
             )}
@@ -844,9 +922,15 @@ const OverviewTab = ({
                         value={editStatus}
                         onChange={(e) => setEditStatus(e.target.value)}
                       >
-                        <option value="active">active</option>
-                        <option value="paused">paused</option>
-                        <option value="archived">archived</option>
+                        <option value="active">
+                          {doNotTranslate('active')}
+                        </option>
+                        <option value="paused">
+                          {doNotTranslate('paused')}
+                        </option>
+                        <option value="archived">
+                          {doNotTranslate('archived')}
+                        </option>
                       </select>
                     ) : (
                       <span style={pillFor(c.status)}>{c.status}</span>
@@ -880,14 +964,14 @@ const OverviewTab = ({
                             setEditingId(null);
                           }}
                         >
-                          Save
+                          {doNotTranslate('Save')}
                         </button>
                         <button
                           style={styles.btn}
                           disabled={busy}
                           onClick={() => setEditingId(null)}
                         >
-                          Cancel
+                          {doNotTranslate('Cancel')}
                         </button>
                       </>
                     ) : (
@@ -902,7 +986,7 @@ const OverviewTab = ({
                           disabled={busy}
                           title="Edit display name + status. Source cannot be changed."
                         >
-                          Edit
+                          {doNotTranslate('Edit')}
                         </button>
                         <button
                           style={{ ...styles.btn, marginRight: 6 }}
@@ -910,7 +994,7 @@ const OverviewTab = ({
                           disabled={busy}
                           title="Dry-run: extract + stage + diff, but rollback before writing to the workspace. Safe on production data."
                         >
-                          Dry-run sync
+                          {doNotTranslate('Dry-run sync')}
                         </button>
                         <button
                           style={{ ...styles.btnPrimary, marginRight: 6 }}
@@ -926,7 +1010,7 @@ const OverviewTab = ({
                           disabled={busy}
                           title="Live sync: same as dry-run but commits the load. Always run a dry-run first."
                         >
-                          Live sync
+                          {doNotTranslate('Live sync')}
                         </button>
                         <button
                           style={styles.btnDanger}
@@ -942,7 +1026,7 @@ const OverviewTab = ({
                           }}
                           title="Soft-style delete: removes the connector row. Past runs and inferred edges are preserved for audit."
                         >
-                          Delete
+                          {doNotTranslate('Delete')}
                         </button>
                       </>
                     )}
@@ -956,28 +1040,51 @@ const OverviewTab = ({
 
       <section style={styles.section}>
         <div style={styles.sectionHeader}>
-          <div style={styles.sectionTitle}>Recent runs</div>
+          <div style={styles.sectionTitle}>{doNotTranslate('Recent runs')}</div>
           <div style={styles.sectionHelp}>
-            Last 30 runs across all connectors. Use this to confirm a sync
-            landed and to see how much data it moved.
+            {doNotTranslate(
+              'Last 30 runs across all connectors. Use this to confirm a sync landed and to see how much data it moved.',
+            )}
           </div>
         </div>
         <table style={styles.table}>
           <thead>
             <tr style={styles.thRow}>
-              <Th tip="When the run was triggered (local time).">Started</Th>
-              <Th tip="User who triggered this run.">Triggered by</Th>
-              <Th tip="full = re-extracts everything; delta = only changes since last sync. dry-run = stages but does not commit.">
-                Mode
+              <Th
+                tip={doNotTranslate('When the run was triggered (local time).')}
+              >
+                {doNotTranslate('Started')}
               </Th>
-              <Th tip="pending = queued. in_progress = the orchestrator is working on it. completed = succeeded. failed = inspect the run record's error_message.">
-                Status
+              <Th tip={doNotTranslate('User who triggered this run.')}>
+                {doNotTranslate('Triggered by')}
               </Th>
-              <Th tip="Rows normalised and staged for load. Excludes rows skipped by dedup.">
-                Rows
+              <Th
+                tip={doNotTranslate(
+                  'full = re-extracts everything; delta = only changes since last sync. dry-run = stages but does not commit.',
+                )}
+              >
+                {doNotTranslate('Mode')}
               </Th>
-              <Th tip="Association edges staged, including AI-inferred ones pending review in Tab 4.">
-                Edges
+              <Th
+                tip={doNotTranslate(
+                  "pending = queued. in_progress = the orchestrator is working on it. completed = succeeded. failed = inspect the run record's error_message.",
+                )}
+              >
+                {doNotTranslate('Status')}
+              </Th>
+              <Th
+                tip={doNotTranslate(
+                  'Rows normalised and staged for load. Excludes rows skipped by dedup.',
+                )}
+              >
+                {doNotTranslate('Rows')}
+              </Th>
+              <Th
+                tip={doNotTranslate(
+                  'Association edges staged, including AI-inferred ones pending review in Tab 4.',
+                )}
+              >
+                {doNotTranslate('Edges')}
               </Th>
             </tr>
           </thead>
@@ -985,7 +1092,9 @@ const OverviewTab = ({
             {syncs.length === 0 && (
               <tr style={styles.tdRow}>
                 <td style={styles.td} colSpan={6}>
-                  No runs yet. Trigger a sync from the table above.
+                  {doNotTranslate(
+                    'No runs yet. Trigger a sync from the table above.',
+                  )}
                 </td>
               </tr>
             )}
@@ -995,7 +1104,7 @@ const OverviewTab = ({
               const modeLabel =
                 s.mode === null
                   ? '—'
-                  : `${s.mode}${s.dryRun === true ? ' · dry-run' : s.dryRun === false ? ' · live' : ''}`;
+                  : `${s.mode}${s.dryRun === true ? doNotTranslate(' · dry-run') : s.dryRun === false ? doNotTranslate(' · live') : ''}`;
               const isOpen = expandedSyncId === s.id;
               const buildConsoleUrl =
                 s.buildId === null
@@ -1041,7 +1150,7 @@ const OverviewTab = ({
                               color: themeCssVariables.font.color.tertiary,
                             }}
                           >
-                            Run ID
+                            {doNotTranslate('Run ID')}
                           </div>
                           <div>
                             <code style={styles.code}>{s.id}</code>
@@ -1051,7 +1160,7 @@ const OverviewTab = ({
                               color: themeCssVariables.font.color.tertiary,
                             }}
                           >
-                            Started
+                            {doNotTranslate('Started')}
                           </div>
                           <div>{new Date(s.startedAt).toLocaleString()}</div>
                           <div
@@ -1059,7 +1168,7 @@ const OverviewTab = ({
                               color: themeCssVariables.font.color.tertiary,
                             }}
                           >
-                            Completed
+                            {doNotTranslate('Completed')}
                           </div>
                           <div>
                             {s.completedAt === null
@@ -1071,7 +1180,7 @@ const OverviewTab = ({
                               color: themeCssVariables.font.color.tertiary,
                             }}
                           >
-                            Last orchestrator event
+                            {doNotTranslate('Last orchestrator event')}
                           </div>
                           <div>
                             {s.lastMarkerAt === null
@@ -1083,13 +1192,14 @@ const OverviewTab = ({
                               color: themeCssVariables.font.color.tertiary,
                             }}
                           >
-                            CodeBuild build ID
+                            {doNotTranslate('CodeBuild build ID')}
                           </div>
                           <div>
                             {s.buildId === null ? (
                               <span style={{ opacity: 0.5 }}>
-                                not started — the orchestrator has not reached
-                                the build step yet
+                                {doNotTranslate(
+                                  'not started — the orchestrator has not reached the build step yet',
+                                )}
                               </span>
                             ) : (
                               <>
@@ -1105,7 +1215,7 @@ const OverviewTab = ({
                                         color: themeCssVariables.color.blue,
                                       }}
                                     >
-                                      open in AWS console ↗
+                                      {doNotTranslate('open in AWS console ↗')}
                                     </a>
                                   </>
                                 )}
@@ -1117,7 +1227,7 @@ const OverviewTab = ({
                               color: themeCssVariables.font.color.tertiary,
                             }}
                           >
-                            Pipeline stages
+                            {doNotTranslate('Pipeline stages')}
                           </div>
                           <div>
                             <PipelineStages s={s} />
@@ -1129,7 +1239,7 @@ const OverviewTab = ({
                                   color: themeCssVariables.font.color.tertiary,
                                 }}
                               >
-                                Error
+                                {doNotTranslate('Error')}
                               </div>
                               <pre
                                 style={{
@@ -1238,20 +1348,26 @@ const MappingsTab = ({
     })();
   }, [selectedConnectorId, busy]);
 
-  if (connectors.length === 0)
+  if (connectors.length === 0) {
     return (
       <div style={styles.helpBanner}>
-        No connectors yet. Create one in <strong>1. Connectors & runs</strong>{' '}
-        first.
+        {doNotTranslate('No connectors yet. Create one in ')}
+        <strong>{doNotTranslate('1. Connectors & runs')}</strong>{' '}
+        {doNotTranslate('first.')}
       </div>
     );
+  }
 
   return (
     <>
       <div style={styles.formCard}>
-        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>Connector</div>
+        <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
+          {doNotTranslate('Connector')}
+        </div>
         <div style={styles.sectionHelp}>
-          Mappings apply per connector — pick which one to edit.
+          {doNotTranslate(
+            'Mappings apply per connector — pick which one to edit.',
+          )}
         </div>
         <select
           style={{ ...styles.input, marginTop: 8, maxWidth: 360 }}
@@ -1268,22 +1384,38 @@ const MappingsTab = ({
 
       <section style={styles.section}>
         <div style={styles.sectionHeader}>
-          <div style={styles.sectionTitle}>Current field overrides</div>
+          <div style={styles.sectionTitle}>
+            {doNotTranslate('Current field overrides')}
+          </div>
           <div style={styles.sectionHelp}>
-            {fieldOverrides.length} override(s) on this connector. Anything not
-            listed here uses the connector's default mapping.
+            {fieldOverrides.length}
+            {doNotTranslate(
+              " override(s) on this connector. Anything not listed here uses the connector's default mapping.",
+            )}
           </div>
         </div>
         <table style={styles.table}>
           <thead>
             <tr style={styles.thRow}>
-              <Th tip="Twenty target table.">Twenty object</Th>
-              <Th tip="Source CRM property name.">Source property</Th>
-              <Th tip="alias / custom / ignore.">Action</Th>
-              <Th tip="Target field name on Twenty (only for alias / custom).">
-                Twenty field
+              <Th tip={doNotTranslate('Twenty target table.')}>
+                {doNotTranslate('Twenty object')}
               </Th>
-              <Th tip="Last write time.">Updated</Th>
+              <Th tip={doNotTranslate('Source CRM property name.')}>
+                {doNotTranslate('Source property')}
+              </Th>
+              <Th tip={doNotTranslate('alias / custom / ignore.')}>
+                {doNotTranslate('Action')}
+              </Th>
+              <Th
+                tip={doNotTranslate(
+                  'Target field name on Twenty (only for alias / custom).',
+                )}
+              >
+                {doNotTranslate('Twenty field')}
+              </Th>
+              <Th tip={doNotTranslate('Last write time.')}>
+                {doNotTranslate('Updated')}
+              </Th>
               <th style={styles.th}></th>
             </tr>
           </thead>
@@ -1291,7 +1423,7 @@ const MappingsTab = ({
             {fieldOverrides.length === 0 && (
               <tr style={styles.tdRow}>
                 <td style={styles.td} colSpan={6}>
-                  No overrides yet. Add one below.
+                  {doNotTranslate('No overrides yet. Add one below.')}
                 </td>
               </tr>
             )}
@@ -1343,7 +1475,7 @@ const MappingsTab = ({
                       }
                     }}
                   >
-                    Remove
+                    {doNotTranslate('Remove')}
                   </button>
                 </td>
               </tr>
@@ -1354,18 +1486,28 @@ const MappingsTab = ({
 
       <section style={styles.section}>
         <div style={styles.sectionHeader}>
-          <div style={styles.sectionTitle}>Current association overrides</div>
+          <div style={styles.sectionTitle}>
+            {doNotTranslate('Current association overrides')}
+          </div>
           <div style={styles.sectionHelp}>
-            {assocOverrides.length} override(s). Sets the canonical semantic for
-            native pairs.
+            {assocOverrides.length}
+            {doNotTranslate(
+              ' override(s). Sets the canonical semantic for native pairs.',
+            )}
           </div>
         </div>
         <table style={styles.table}>
           <thead>
             <tr style={styles.thRow}>
-              <Th tip="Source pair, format left:right.">Native pair</Th>
-              <Th tip="Twenty canonical semantic name.">Semantic name</Th>
-              <Th tip="Last write time.">Updated</Th>
+              <Th tip={doNotTranslate('Source pair, format left:right.')}>
+                {doNotTranslate('Native pair')}
+              </Th>
+              <Th tip={doNotTranslate('Twenty canonical semantic name.')}>
+                {doNotTranslate('Semantic name')}
+              </Th>
+              <Th tip={doNotTranslate('Last write time.')}>
+                {doNotTranslate('Updated')}
+              </Th>
               <th style={styles.th}></th>
             </tr>
           </thead>
@@ -1373,7 +1515,7 @@ const MappingsTab = ({
             {assocOverrides.length === 0 && (
               <tr style={styles.tdRow}>
                 <td style={styles.td} colSpan={4}>
-                  No overrides yet. Add one below.
+                  {doNotTranslate('No overrides yet. Add one below.')}
                 </td>
               </tr>
             )}
@@ -1407,7 +1549,7 @@ const MappingsTab = ({
                       }
                     }}
                   >
-                    Remove
+                    {doNotTranslate('Remove')}
                   </button>
                 </td>
               </tr>
@@ -1418,72 +1560,94 @@ const MappingsTab = ({
 
       <div style={styles.formCard}>
         <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
-          Field mapping override
+          {doNotTranslate('Field mapping override')}
         </div>
         <div style={styles.sectionHelp}>
-          Decide what happens to a source property at load time. Each connector
-          ships with sensible defaults — overrides set here apply only to this
-          connector and win at sync time.
+          {doNotTranslate(
+            'Decide what happens to a source property at load time. Each connector ships with sensible defaults — overrides set here apply only to this connector and win at sync time.',
+          )}
         </div>
         <div style={styles.formGrid}>
           <div>
             <label style={styles.label}>
-              Twenty object{' '}
-              <InfoIcon tip="Which Twenty table the source property lands on: company, person, opportunity, task, note." />
+              {doNotTranslate('Twenty object')}{' '}
+              <InfoIcon
+                tip={doNotTranslate(
+                  'Which Twenty table the source property lands on: company, person, opportunity, task, note.',
+                )}
+              />
             </label>
             <select
               style={styles.input}
               value={twentyObject}
               onChange={(e) => setTwentyObject(e.target.value)}
             >
-              <option>company</option>
-              <option>person</option>
-              <option>opportunity</option>
-              <option>task</option>
-              <option>note</option>
+              <option>{doNotTranslate('company')}</option>
+              <option>{doNotTranslate('person')}</option>
+              <option>{doNotTranslate('opportunity')}</option>
+              <option>{doNotTranslate('task')}</option>
+              <option>{doNotTranslate('note')}</option>
             </select>
           </div>
           <div>
             <label style={styles.label}>
-              Source property{' '}
-              <InfoIcon tip="The source CRM property name exactly as it appears in the source (e.g. 'hs_lead_status' on HubSpot)." />
+              {doNotTranslate('Source property')}{' '}
+              <InfoIcon
+                tip={doNotTranslate(
+                  "The source CRM property name exactly as it appears in the source (e.g. 'hs_lead_status' on HubSpot).",
+                )}
+              />
             </label>
             <input
               style={styles.input}
               value={sourceProperty}
               onChange={(e) => setSourceProperty(e.target.value)}
-              placeholder="hs_lead_status"
+              placeholder={doNotTranslate('hs_lead_status')}
             />
           </div>
           <div>
             <label style={styles.label}>
-              Action{' '}
-              <InfoIcon tip="alias = map to an existing Twenty field. custom = create a new custom field in Twenty. ignore = drop the property on load." />
+              {doNotTranslate('Action')}{' '}
+              <InfoIcon
+                tip={doNotTranslate(
+                  'alias = map to an existing Twenty field. custom = create a new custom field in Twenty. ignore = drop the property on load.',
+                )}
+              />
             </label>
             <select
               style={styles.input}
               value={action}
               onChange={(e) => setAction(e.target.value)}
             >
-              <option value="alias">alias → existing field</option>
-              <option value="custom">custom → new field</option>
-              <option value="ignore">ignore → drop</option>
+              <option value="alias">
+                {doNotTranslate('alias → existing field')}
+              </option>
+              <option value="custom">
+                {doNotTranslate('custom → new field')}
+              </option>
+              <option value="ignore">{doNotTranslate('ignore → drop')}</option>
             </select>
           </div>
           <div>
             <label style={styles.label}>
-              Twenty field{' '}
+              {doNotTranslate('Twenty field')}{' '}
               {action === 'ignore' ? (
-                <span style={{ opacity: 0.5 }}>(unused)</span>
+                <span style={{ opacity: 0.5 }}>
+                  {doNotTranslate('(unused)')}
+                </span>
               ) : (
-                <InfoIcon tip="Required for 'alias' — the existing field name on Twenty (e.g. 'leadStatus'). Required for 'custom' — the new field name to create. Leave empty for 'ignore'." />
+                <InfoIcon
+                  tip={doNotTranslate(
+                    "Required for 'alias' — the existing field name on Twenty (e.g. 'leadStatus'). Required for 'custom' — the new field name to create. Leave empty for 'ignore'.",
+                  )}
+                />
               )}
             </label>
             <input
               style={styles.input}
               value={twentyField}
               onChange={(e) => setTwentyField(e.target.value)}
-              placeholder="leadStatus"
+              placeholder={doNotTranslate('leadStatus')}
               disabled={action === 'ignore'}
             />
           </div>
@@ -1504,43 +1668,54 @@ const MappingsTab = ({
             })
           }
         >
-          Save field mapping
+          {doNotTranslate('Save field mapping')}
         </button>
       </div>
 
       <div style={styles.formCard}>
         <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
-          Association mapping override
+          {doNotTranslate('Association mapping override')}
         </div>
         <div style={styles.sectionHelp}>
-          Tells the connector what semantic association a native pair
-          represents. Example: HubSpot's{' '}
-          <code style={styles.code}>company:contact</code> pair is universally{' '}
-          <code style={styles.code}>employs</code> in Twenty's semantic graph.
+          {doNotTranslate(
+            "Tells the connector what semantic association a native pair represents. Example: HubSpot's",
+          )}{' '}
+          <code style={styles.code}>{doNotTranslate('company:contact')}</code>
+          {doNotTranslate(' pair is universally')}{' '}
+          <code style={styles.code}>{doNotTranslate('employs')}</code>
+          {doNotTranslate(" in Twenty's semantic graph.")}
         </div>
         <div style={styles.formGrid}>
           <div>
             <label style={styles.label}>
-              Native pair{' '}
-              <InfoIcon tip="Native association name from the source. Format: left:right using the source's object names. E.g. HubSpot 'companies:contacts'." />
+              {doNotTranslate('Native pair')}{' '}
+              <InfoIcon
+                tip={doNotTranslate(
+                  "Native association name from the source. Format: left:right using the source's object names. E.g. HubSpot 'companies:contacts'.",
+                )}
+              />
             </label>
             <input
               style={styles.input}
               value={nativePair}
               onChange={(e) => setNativePair(e.target.value)}
-              placeholder="company:person"
+              placeholder={doNotTranslate('company:person')}
             />
           </div>
           <div>
             <label style={styles.label}>
-              Semantic name{' '}
-              <InfoIcon tip="Canonical Twenty semantic name used by the universal association graph. Examples: employs, attended_by, owned_by." />
+              {doNotTranslate('Semantic name')}{' '}
+              <InfoIcon
+                tip={doNotTranslate(
+                  'Canonical Twenty semantic name used by the universal association graph. Examples: employs, attended_by, owned_by.',
+                )}
+              />
             </label>
             <input
               style={styles.input}
               value={semanticName}
               onChange={(e) => setSemanticName(e.target.value)}
-              placeholder="employs"
+              placeholder={doNotTranslate('employs')}
             />
           </div>
         </div>
@@ -1558,7 +1733,7 @@ const MappingsTab = ({
             })
           }
         >
-          Save association mapping
+          {doNotTranslate('Save association mapping')}
         </button>
       </div>
     </>
@@ -1586,43 +1761,65 @@ const BulkImportTab = ({
 
   const sampleJSON = JSON.stringify(
     [
-      { natural_key: 'acme.com', domain: 'acme.com', name: 'Acme Inc.' },
-      { natural_key: 'globex.com', domain: 'globex.com', name: 'Globex Corp.' },
+      {
+        natural_key: 'acme.com',
+        domain: 'acme.com',
+        name: doNotTranslate('Acme Inc.'),
+      },
+      {
+        natural_key: 'globex.com',
+        domain: 'globex.com',
+        name: doNotTranslate('Globex Corp.'),
+      },
     ],
     null,
     2,
   );
   const [text, setText] = useState(sampleJSON);
 
-  if (connectors.length === 0)
+  if (connectors.length === 0) {
     return (
       <div style={styles.helpBanner}>
-        No connectors yet. Bulk import needs a connector to scope the run to —{' '}
-        create one in <strong>1. Connectors & runs</strong> first.
+        {doNotTranslate(
+          'No connectors yet. Bulk import needs a connector to scope the run to —',
+        )}{' '}
+        {doNotTranslate('create one in ')}
+        <strong>{doNotTranslate('1. Connectors & runs')}</strong>
+        {doNotTranslate(' first.')}
       </div>
     );
+  }
 
   return (
     <>
       <div style={styles.formCard}>
         <div style={{ ...styles.sectionTitle, marginBottom: 4 }}>
-          Bulk import rows
+          {doNotTranslate('Bulk import rows')}
         </div>
         <div style={styles.sectionHelp}>
-          One-shot import for ad-hoc data (CSV uploads, manual lists, paper-form
-          transcription). Rows are queued into{' '}
-          <code style={styles.code}>migration_staging.normalized_rows</code>{' '}
-          under a fresh run, ready for the loader to push into Twenty.
+          {doNotTranslate(
+            'One-shot import for ad-hoc data (CSV uploads, manual lists, paper-form transcription). Rows are queued into',
+          )}{' '}
+          <code style={styles.code}>
+            {doNotTranslate('migration_staging.normalized_rows')}
+          </code>{' '}
+          {doNotTranslate(
+            'under a fresh run, ready for the loader to push into Twenty.',
+          )}
           <br />
-          Required per row: <code style={styles.code}>natural_key</code> (any
-          stable string — domain, email, internal ID). Optional:{' '}
-          <code style={styles.code}>external_id</code> (defaults to
-          natural_key). Everything else is stored in the raw JSON and used by
-          the connector's normaliser.
+          {doNotTranslate('Required per row: ')}
+          <code style={styles.code}>{doNotTranslate('natural_key')}</code>
+          {doNotTranslate(
+            ' (any stable string — domain, email, internal ID). Optional:',
+          )}{' '}
+          <code style={styles.code}>{doNotTranslate('external_id')}</code>
+          {doNotTranslate(
+            " (defaults to natural_key). Everything else is stored in the raw JSON and used by the connector's normaliser.",
+          )}
         </div>
         <div style={styles.formGrid}>
           <div>
-            <label style={styles.label}>Connector</label>
+            <label style={styles.label}>{doNotTranslate('Connector')}</label>
             <select
               style={styles.input}
               value={selectedConnectorId ?? ''}
@@ -1636,21 +1833,25 @@ const BulkImportTab = ({
             </select>
           </div>
           <div>
-            <label style={styles.label}>Twenty object</label>
+            <label style={styles.label}>
+              {doNotTranslate('Twenty object')}
+            </label>
             <select
               style={styles.input}
               value={twentyObject}
               onChange={(e) => setTwentyObject(e.target.value)}
             >
-              <option>company</option>
-              <option>person</option>
-              <option>opportunity</option>
-              <option>task</option>
-              <option>note</option>
+              <option>{doNotTranslate('company')}</option>
+              <option>{doNotTranslate('person')}</option>
+              <option>{doNotTranslate('opportunity')}</option>
+              <option>{doNotTranslate('task')}</option>
+              <option>{doNotTranslate('note')}</option>
             </select>
           </div>
         </div>
-        <label style={styles.label}>Rows (JSON array)</label>
+        <label style={styles.label}>
+          {doNotTranslate('Rows (JSON array)')}
+        </label>
         <textarea
           ref={sampleRef}
           style={{
@@ -1667,7 +1868,7 @@ const BulkImportTab = ({
             onClick={() => setText(sampleJSON)}
             title="Reset the textarea to a working example."
           >
-            Reset to example
+            {doNotTranslate('Reset to example')}
           </button>
           <button
             style={styles.btnPrimary}
@@ -1676,17 +1877,19 @@ const BulkImportTab = ({
               let rows: Array<Record<string, unknown>>;
               try {
                 rows = JSON.parse(text);
-                if (!Array.isArray(rows))
+                if (!Array.isArray(rows)) {
                   throw new Error('Top-level must be a JSON array.');
+                }
               } catch (e) {
                 alert(`Invalid JSON: ${(e as Error).message}`);
                 return;
               }
-              if (selectedConnectorId !== null)
+              if (selectedConnectorId !== null) {
                 void onSubmit(selectedConnectorId, { twentyObject, rows });
+              }
             }}
           >
-            Queue bulk import
+            {doNotTranslate('Queue bulk import')}
           </button>
         </div>
       </div>
@@ -1722,15 +1925,15 @@ const InferredTab = ({
   return (
     <>
       <div style={styles.helpBanner}>
-        <strong>Inferred edges</strong> are links Bedrock (Claude Sonnet 4.6)
-        detected between rows the source CRM did not connect explicitly — for
-        example, a task whose title mentions a person's name. Each edge carries
-        an evidence string and a confidence score. Promote the ones you trust;
-        bulk-reject the rest under a threshold.
+        <strong>{doNotTranslate('Inferred edges')}</strong>
+        {doNotTranslate(
+          " are links Bedrock (Claude Sonnet 4.6) detected between rows the source CRM did not connect explicitly — for example, a task whose title mentions a person's name. Each edge carries an evidence string and a confidence score. Promote the ones you trust; bulk-reject the rest under a threshold.",
+        )}
         <br />
         <span style={{ color: themeCssVariables.font.color.tertiary }}>
-          Threshold ≥ 0.9 is usually safe to auto-promote in batch. Below 0.7 is
-          noisy — start there and walk up.
+          {doNotTranslate(
+            'Threshold ≥ 0.9 is usually safe to auto-promote in batch. Below 0.7 is noisy — start there and walk up.',
+          )}
         </span>
       </div>
 
@@ -1743,7 +1946,7 @@ const InferredTab = ({
         }}
       >
         <label style={{ ...styles.label, margin: 0 }}>
-          Minimum confidence:
+          {doNotTranslate('Minimum confidence:')}
         </label>
         <input
           type="range"
@@ -1756,7 +1959,8 @@ const InferredTab = ({
         />
         <code style={styles.code}>{minConfidence.toFixed(2)}</code>
         <span style={{ ...styles.sectionHelp, marginLeft: 'auto' }}>
-          {edges.length} edge(s) at this threshold
+          {edges.length}
+          {doNotTranslate(' edge(s) at this threshold')}
         </span>
       </div>
 
@@ -1771,8 +1975,10 @@ const InferredTab = ({
             }}
           >
             <div style={{ fontSize: 13 }}>
-              Run <code style={styles.code}>{runId.slice(0, 8)}…</code> ·{' '}
-              {runEdges.length} edge(s)
+              {doNotTranslate('Run ')}
+              <code style={styles.code}>{runId.slice(0, 8)}…</code> ·{' '}
+              {runEdges.length}
+              {doNotTranslate(' edge(s)')}
             </div>
             <button
               style={styles.btnDanger}
@@ -1785,12 +1991,14 @@ const InferredTab = ({
                       8,
                     )}…? This is destructive.`,
                   )
-                )
+                ) {
                   void onRejectBelow(runId, minConfidence);
+                }
               }}
               title="Delete every inferred edge in this run whose confidence is ≤ the slider threshold. Edges already promoted are not touched."
             >
-              Reject all below {minConfidence.toFixed(2)}
+              {doNotTranslate('Reject all below ')}
+              {minConfidence.toFixed(2)}
             </button>
           </div>
           {runEdges.map((e, i) => (
@@ -1827,7 +2035,9 @@ const InferredTab = ({
                     marginTop: 4,
                   }}
                 >
-                  &ldquo;{e.parentTitle}&rdquo;
+                  {doNotTranslate('&ldquo;')}
+                  {e.parentTitle}
+                  {doNotTranslate('&rdquo;')}
                 </div>
               )}
               <button
@@ -1836,7 +2046,7 @@ const InferredTab = ({
                 disabled={busy}
                 title="Mark this edge as manually approved. The loader will write it into Twenty's association graph alongside CRM-native edges."
               >
-                Promote to canonical
+                {doNotTranslate('Promote to canonical')}
               </button>
             </div>
           ))}
@@ -1847,7 +2057,8 @@ const InferredTab = ({
         <div
           style={{ color: themeCssVariables.font.color.tertiary, fontSize: 13 }}
         >
-          No pending inferred edges at confidence ≥ {minConfidence.toFixed(2)}.
+          {doNotTranslate('No pending inferred edges at confidence ≥ ')}
+          {minConfidence.toFixed(2)}.
         </div>
       )}
     </>
@@ -1857,12 +2068,12 @@ const InferredTab = ({
 const DocsTab = () => (
   <div style={styles.card}>
     <div style={{ ...styles.sectionTitle, marginBottom: 12 }}>
-      Docs · quick reference
+      {doNotTranslate('Docs · quick reference')}
     </div>
 
     <details open style={{ marginBottom: 10 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
-        Concepts in 30 seconds
+        {doNotTranslate('Concepts in 30 seconds')}
       </summary>
       <ul
         style={{
@@ -1872,25 +2083,29 @@ const DocsTab = () => (
         }}
       >
         <li>
-          <strong>Connector</strong> — one source CRM (HubSpot, Salesforce…)
-          linked to this Twenty workspace. Each gets its own credentials and
-          mappings.
+          <strong>{doNotTranslate('Connector')}</strong>
+          {doNotTranslate(
+            ' — one source CRM (HubSpot, Salesforce…) linked to this Twenty workspace. Each gets its own credentials and mappings.',
+          )}
         </li>
         <li>
-          <strong>Sync run</strong> — a single extract → normalize → load cycle.
-          Always start with a dry-run to see counts before committing.
+          <strong>{doNotTranslate('Sync run')}</strong>
+          {doNotTranslate(
+            ' — a single extract → normalize → load cycle. Always start with a dry-run to see counts before committing.',
+          )}
         </li>
         <li>
-          <strong>Inferred edges</strong> — links Bedrock detects between
-          tasks/notes and people/companies the source CRM didn't connect
-          explicitly. You review and approve them in Tab 4.
+          <strong>{doNotTranslate('Inferred edges')}</strong>
+          {doNotTranslate(
+            " — links Bedrock detects between tasks/notes and people/companies the source CRM didn't connect explicitly. You review and approve them in Tab 4.",
+          )}
         </li>
       </ul>
     </details>
 
     <details style={{ marginBottom: 10 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
-        End-to-end happy path
+        {doNotTranslate('End-to-end happy path')}
       </summary>
       <ol
         style={{
@@ -1899,35 +2114,47 @@ const DocsTab = () => (
           color: themeCssVariables.font.color.secondary,
         }}
       >
-        <li>Create a connector (Tab 1 → "Connect a new source CRM").</li>
         <li>
-          Optionally override field/association mappings (Tab 2). Skip if
-          defaults are fine.
+          {doNotTranslate(
+            'Create a connector (Tab 1 → "Connect a new source CRM").',
+          )}
         </li>
         <li>
-          Trigger a <strong>dry-run sync</strong> first — never a live one until
-          you've seen the row count.
+          {doNotTranslate(
+            'Optionally override field/association mappings (Tab 2). Skip if defaults are fine.',
+          )}
         </li>
         <li>
-          Watch the run row appear in "Recent runs". Wait for status →
-          completed.
+          {doNotTranslate('Trigger a ')}
+          <strong>{doNotTranslate('dry-run sync')}</strong>
+          {doNotTranslate(
+            " first — never a live one until you've seen the row count.",
+          )}
         </li>
         <li>
-          Switch to Tab 4 and review inferred edges. Promote the obvious ones,
-          reject the rest below a threshold.
+          {doNotTranslate(
+            'Watch the run row appear in "Recent runs". Wait for status → completed.',
+          )}
         </li>
         <li>
-          When happy, trigger a <strong>live sync</strong> on the same
-          connector. Same diff, but commits.
+          {doNotTranslate(
+            'Switch to Tab 4 and review inferred edges. Promote the obvious ones, reject the rest below a threshold.',
+          )}
+        </li>
+        <li>
+          {doNotTranslate('When happy, trigger a ')}
+          <strong>{doNotTranslate('live sync')}</strong>
+          {doNotTranslate(' on the same connector. Same diff, but commits.')}
         </li>
       </ol>
     </details>
 
     <details style={{ marginBottom: 10 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
-        cURL reference (power users)
+        {doNotTranslate('cURL reference (power users)')}
       </summary>
-      <pre style={styles.codeBlock}>{`# List connectors
+      <pre style={styles.codeBlock}>
+        {doNotTranslate(`# List connectors
 curl -H "Authorization: Bearer $TOKEN" \\
   https://dev.dojo.bamrun.com/_premaccess/connectors?workspaceId=$WS
 
@@ -1947,12 +2174,13 @@ curl -H "Authorization: Bearer $TOKEN" \\
 curl -H "Authorization: Bearer $TOKEN" \\
   -H 'Content-Type: application/json' \\
   -d '{"runId":"...","semanticType":"task_about_person","fromTwentyId":"...","toTwentyId":"..."}' \\
-  https://dev.dojo.bamrun.com/_premaccess/inferred-edges/promote`}</pre>
+  https://dev.dojo.bamrun.com/_premaccess/inferred-edges/promote`)}
+      </pre>
     </details>
 
     <details style={{ marginBottom: 10 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
-        Troubleshooting
+        {doNotTranslate('Troubleshooting')}
       </summary>
       <ul
         style={{
@@ -1962,23 +2190,30 @@ curl -H "Authorization: Bearer $TOKEN" \\
         }}
       >
         <li>
-          <strong>401 Unauthorized</strong> — your Twenty session expired. Log
-          out and back in.
+          <strong>{doNotTranslate('401 Unauthorized')}</strong>
+          {doNotTranslate(
+            ' — your Twenty session expired. Log out and back in.',
+          )}
         </li>
         <li>
-          <strong>Sync stuck at pending</strong> — the background worker that
-          picks up runs is not wired yet. Pending rows are normal in the current
-          preview build; ask an admin if it stays pending overnight.
+          <strong>{doNotTranslate('Sync stuck at pending')}</strong>
+          {doNotTranslate(
+            ' — the background worker that picks up runs is not wired yet. Pending rows are normal in the current preview build; ask an admin if it stays pending overnight.',
+          )}
         </li>
         <li>
-          <strong>Bulk import returns failed &gt; 0</strong> — open the
-          firstError field in the response. Most common cause: two rows share
-          the same natural_key. Make every row's natural_key unique.
+          <strong>{doNotTranslate('Bulk import returns failed &gt; 0')}</strong>
+          {doNotTranslate(
+            " — open the firstError field in the response. Most common cause: two rows share the same natural_key. Make every row's natural_key unique.",
+          )}
         </li>
         <li>
-          <strong>Login screen reappears after deploy</strong> — JWT secret is
-          pinned, but access tokens expire on a TTL. Re-enter your credentials;
-          the session sticks across deploys after that.
+          <strong>
+            {doNotTranslate('Login screen reappears after deploy')}
+          </strong>
+          {doNotTranslate(
+            ' — JWT secret is pinned, but access tokens expire on a TTL. Re-enter your credentials; the session sticks across deploys after that.',
+          )}
         </li>
       </ul>
     </details>

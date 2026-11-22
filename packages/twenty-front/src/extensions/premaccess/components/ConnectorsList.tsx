@@ -1,3 +1,4 @@
+import { doNotTranslate } from 'twenty-shared/i18n';
 import { useQuery } from '@apollo/client/react';
 
 import { CONNECTORS_QUERY } from '../graphql/premaccess.queries';
@@ -36,15 +37,26 @@ export const ConnectorsList = ({ workspaceId }: ConnectorsListProps) => {
     },
   );
 
-  if (loading) return <div>Loading connectors…</div>;
-  if (error) return <div>Error loading connectors: {error.message}</div>;
+  if (loading) {
+    return <div>{doNotTranslate('Loading connectors…')}</div>;
+  }
+  if (error) {
+    return (
+      <div>
+        {doNotTranslate('Error loading connectors: ')}
+        {error.message}
+      </div>
+    );
+  }
 
   const connectors = data?.connectors ?? [];
   if (connectors.length === 0) {
     return (
       <div>
-        <p>No connectors yet.</p>
-        <a href="/_premaccess/connectors/new">+ Connect a source</a>
+        <p>{doNotTranslate('No connectors yet.')}</p>
+        <a href="/_premaccess/connectors/new">
+          {doNotTranslate('+ Connect a source')}
+        </a>
       </div>
     );
   }
@@ -58,17 +70,19 @@ export const ConnectorsList = ({ workspaceId }: ConnectorsListProps) => {
           marginBottom: 16,
         }}
       >
-        <h2>Connectors</h2>
-        <a href="/_premaccess/connectors/new">+ Connect a source</a>
+        <h2>{doNotTranslate('Connectors')}</h2>
+        <a href="/_premaccess/connectors/new">
+          {doNotTranslate('+ Connect a source')}
+        </a>
       </header>
       <table>
         <thead>
           <tr>
-            <th>Source</th>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Last sync</th>
-            <th>Custom mappings</th>
+            <th>{doNotTranslate('Source')}</th>
+            <th>{doNotTranslate('Name')}</th>
+            <th>{doNotTranslate('Status')}</th>
+            <th>{doNotTranslate('Last sync')}</th>
+            <th>{doNotTranslate('Custom mappings')}</th>
           </tr>
         </thead>
         <tbody>
@@ -82,7 +96,7 @@ export const ConnectorsList = ({ workspaceId }: ConnectorsListProps) => {
               <td>
                 {c.lastSyncAt
                   ? `${new Date(c.lastSyncAt).toLocaleString()} — ${c.lastSyncStatus ?? '?'}`
-                  : 'never'}
+                  : doNotTranslate('never')}
               </td>
               <td>{c.fieldOverrideCount}</td>
             </tr>

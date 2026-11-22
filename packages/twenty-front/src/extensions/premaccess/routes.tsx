@@ -1,3 +1,4 @@
+import { doNotTranslate } from 'twenty-shared/i18n';
 import { Route, Routes } from 'react-router-dom';
 
 import { ConnectorsList } from './components/ConnectorsList';
@@ -45,9 +46,14 @@ const ConnectorDetailPage = ({ workspaceId }: { workspaceId: string }) => {
   // useParams resolution lands when the route is actually mounted in App.tsx.
   return (
     <div>
-      <h2>Connector detail (scaffold)</h2>
-      <p>Workspace: {workspaceId}</p>
-      <SyncTrigger connectorId="(pending getConnector query)" />
+      <h2>{doNotTranslate('Connector detail (scaffold)')}</h2>
+      <p>
+        {doNotTranslate('Workspace: ')}
+        {workspaceId}
+      </p>
+      <SyncTrigger
+        connectorId={doNotTranslate('(pending getConnector query)')}
+      />
     </div>
   );
 };
