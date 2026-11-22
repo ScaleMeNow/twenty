@@ -82,11 +82,11 @@ jobs:
             # an extension section mounted by one import + one JSX line
             ["packages/twenty-front/src/modules/navigation/components/MainNavigationDrawerScrollableItems.tsx"]=2
             # root manifest: the premaccess workspace entry (2), the comma on the line each
-            # block follows (1), the fork's resolutions (10, one row each in
-            # packages/premaccess/RESOLUTIONS.md) and upstream's two sharp entries raised to
-            # 0.35.5 (2). A new resolution gets its row there and moves this cap to the exact
-            # new count in the same commit.
-            ["package.json"]=15
+            # block follows (1) and the fork's resolutions (10, one row each in
+            # packages/premaccess/RESOLUTIONS.md, enforced by check-fork-resolutions.py below).
+            # A new resolution gets its row there and moves this cap to the exact new count in
+            # the same commit.
+            ["package.json"]=13
             ["packages/twenty-docker/twenty/Dockerfile"]=10
             # yarn.lock grows with every fork dependency plus upstream drift; it never
             # conflicts in a way that makes a rebase expensive, so the cap only exists to
@@ -200,3 +200,13 @@ jobs:
           fi
           echo
           echo "Fork CI gate passed (${#TOUCHED[@]} upstream file(s) touched, all within caps)."
+
+      # Every "resolutions" key the fork adds, changes or removes, in the root or a nested
+      # manifest, has its row in packages/premaccess/RESOLUTIONS.md, and no row outlives it.
+      # The dep-manifest tier above caps nested manifests by line count only, so it cannot
+      # see this. Runs even when the invariant failed, so one push reports both.
+      - name: Fork resolutions are declared
+        if: success() || failure()
+        run: |
+          python3 -m unittest discover -q -s packages/premaccess/scripts -p 'test_*.py'
+          python3 packages/premaccess/scripts/check-fork-resolutions.py --base upstream/main
