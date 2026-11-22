@@ -104,10 +104,10 @@ jobs:
             # published twenty image only warns when its ref no longer matches ours
             # (see packages/premaccess/UPSTREAM-IMAGE-DRIFT.md)
             [".github/workflows/ci-twenty-apps.yaml"]=24
-            # the dockerhub-latest app arm reports drift instead of gating: the
-            # published image is a Twenty release this fork is behind between
-            # weekly rebases. See packages/premaccess/UPSTREAM-IMAGE-DRIFT.md.
-            [".github/workflows/ci-twenty-apps.yaml"]=24
+            # upstream b1a99792c3 fails its own front lint (twenty/matching-state-variable):
+            # the AI chat participants selector is read into a misnamed variable. Upstream
+            # skipped front lint on that SHA. Drop this once upstream renames it.
+            ["packages/twenty-front/src/modules/inbox/hooks/useInboxThreadTriage.ts"]=2
             # --- SECURITY PATCHES (drop when upstream fixes the alert) ---
             # js/insufficient-password-hash: reset token hashing (alert 23)
             ["packages/twenty-server/src/engine/core-modules/auth/services/reset-password.service.ts"]=32
