@@ -82,11 +82,11 @@ jobs:
             # an extension section mounted by one import + one JSX line
             ["packages/twenty-front/src/modules/navigation/components/MainNavigationDrawerScrollableItems.tsx"]=2
             # root manifest: the premaccess workspace entry (2), the comma on the line each
-            # block follows (1) and the fork's resolutions (10, one row each in
-            # packages/premaccess/RESOLUTIONS.md, enforced by check-fork-resolutions.py below).
-            # A new resolution gets its row there and moves this cap to the exact new count in
-            # the same commit.
-            ["package.json"]=13
+            # block follows (1) and the fork's resolution lines (38: 37 keys plus upstream's
+            # @node-minify/core/glob raised, every one in packages/premaccess/RESOLUTIONS.md,
+            # enforced by check-fork-resolutions.py below). A resolution change moves this cap
+            # to the exact new count in the same commit.
+            ["package.json"]=41
             ["packages/twenty-docker/twenty/Dockerfile"]=10
             # yarn.lock grows with every fork dependency plus upstream drift; it never
             # conflicts in a way that makes a rebase expensive, so the cap only exists to

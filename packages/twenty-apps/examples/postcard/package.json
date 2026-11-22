@@ -37,5 +37,9 @@
     "twenty-sdk": "2.31.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.12"
+  },
+  "resolutions": {
+    "glob": "^14.0.6",
+    "minimatch": "^11.0.9"
   }
 }
