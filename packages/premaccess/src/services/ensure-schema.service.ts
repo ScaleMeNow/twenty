@@ -72,6 +72,13 @@ export class EnsureSchemaService implements OnModuleInit {
       name: '2-5-create-signing-key-is-current-unique-index',
       sql: 'CREATE UNIQUE INDEX IF NOT EXISTS "IDX_SIGNING_KEY_IS_CURRENT_UNIQUE" ON "core"."signingKey" ("isCurrent") WHERE "isCurrent" = true',
     },
+    {
+      // 2.47.0 fast, ts 1791898075681: sorts behind the 2.48.0 resume point the
+      // instance had already recorded, so the 2026-11-23 boot aborted with
+      // `column FrontComponentEntity.widgetAvailability does not exist`.
+      name: '2-47-add-widget-availability-to-front-component',
+      sql: `ALTER TABLE "core"."frontComponent" ADD COLUMN IF NOT EXISTS "widgetAvailability" jsonb NOT NULL DEFAULT '[]'`,
+    },
   ];
 
   async onModuleInit(): Promise<void> {
